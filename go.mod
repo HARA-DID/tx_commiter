@@ -4,7 +4,9 @@ go 1.25.5
 
 require (
 	github.com/HARA-DID/account-abstraction-sdk v1.0.1
+	github.com/HARA-DID/alias-root-sdk v1.0.1
 	github.com/HARA-DID/did-root-sdk v1.0.1
+	github.com/HARA-DID/did-verifiable-credentials-sdk v1.0.1
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
@@ -15,8 +17,6 @@ require (
 )
 
 require (
-	github.com/HARA-DID/alias-root-sdk v1.0.1 // indirect
-	github.com/HARA-DID/did-verifiable-credentials-sdk v1.0.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProjectZKM/Ziren/crates/go-runtime/zkvm_runtime v0.0.0-20251001021608-1fe7b43fc4d6 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
