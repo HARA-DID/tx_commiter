@@ -20,6 +20,10 @@ const (
 	EventTypeAddMember     EventType = "ADD_MEMBER"
 	EventTypeRemoveMember  EventType = "REMOVE_MEMBER"
 	EventTypeUpdateMember  EventType = "UPDATE_MEMBER"
+	EventTypeGeneralExecute EventType = "GENERAL_EXECUTE"
+	EventTypeDeactivateOrg  EventType = "DEACTIVATE_ORG"
+	EventTypeReactivateOrg  EventType = "REACTIVATE_ORG"
+	EventTypeTransferOrgOwner EventType = "TRANSFER_ORG_OWNER"
 )
 
 type CreateDIDPayload struct {

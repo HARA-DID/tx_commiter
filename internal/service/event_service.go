@@ -139,6 +139,111 @@ func (s *EventService) dispatch(ctx context.Context, event *domain.Event) (*doma
 		}
 		return s.blockchain.DeployWallet(ctx, p)
 
+	case domain.EventTypeUpdateDID:
+		var p domain.UpdateDIDPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal UpdateDIDPayload: %w", err)
+		}
+		return s.blockchain.UpdateDID(ctx, p)
+
+	case domain.EventTypeDeactivateDID:
+		var p domain.DIDLifecyclePayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal DIDLifecyclePayload: %w", err)
+		}
+		return s.blockchain.DeactivateDID(ctx, p)
+
+	case domain.EventTypeReactivateDID:
+		var p domain.DIDLifecyclePayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal DIDLifecyclePayload: %w", err)
+		}
+		return s.blockchain.ReactivateDID(ctx, p)
+
+	case domain.EventTypeTransferDID:
+		var p domain.TransferDIDOwnerPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal TransferDIDOwnerPayload: %w", err)
+		}
+		return s.blockchain.TransferDIDOwner(ctx, p)
+
+	case domain.EventTypeDeleteData:
+		var p domain.DeleteDataPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal DeleteDataPayload: %w", err)
+		}
+		return s.blockchain.DeleteData(ctx, p)
+
+	case domain.EventTypeRemoveKey:
+		var p domain.RemoveKeyPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal RemoveKeyPayload: %w", err)
+		}
+		return s.blockchain.RemoveKey(ctx, p)
+
+	case domain.EventTypeRemoveClaim:
+		var p domain.RemoveClaimPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal RemoveClaimPayload: %w", err)
+		}
+		return s.blockchain.RemoveClaim(ctx, p)
+
+	case domain.EventTypeGeneralExecute:
+		var p domain.GeneralExecutePayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal GeneralExecutePayload: %w", err)
+		}
+		return s.blockchain.GeneralExecute(ctx, p)
+
+	case domain.EventTypeCreateOrg:
+		var p domain.CreateOrgPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal CreateOrgPayload: %w", err)
+		}
+		return s.blockchain.CreateOrg(ctx, p)
+
+	case domain.EventTypeAddMember:
+		var p domain.OrgMemberPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal OrgMemberPayload: %w", err)
+		}
+		return s.blockchain.AddMember(ctx, p)
+
+	case domain.EventTypeRemoveMember:
+		var p domain.OrgMemberPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal OrgMemberPayload: %w", err)
+		}
+		return s.blockchain.RemoveMember(ctx, p)
+
+	case domain.EventTypeUpdateMember:
+		var p domain.OrgMemberPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal OrgMemberPayload: %w", err)
+		}
+		return s.blockchain.UpdateMember(ctx, p)
+
+	case domain.EventTypeDeactivateOrg:
+		var p domain.OrgLifecyclePayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal OrgLifecyclePayload: %w", err)
+		}
+		return s.blockchain.DeactivateOrg(ctx, p)
+
+	case domain.EventTypeReactivateOrg:
+		var p domain.OrgLifecyclePayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal OrgLifecyclePayload: %w", err)
+		}
+		return s.blockchain.ReactivateOrg(ctx, p)
+
+	case domain.EventTypeTransferOrgOwner:
+		var p domain.OrgTransferPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal OrgTransferPayload: %w", err)
+		}
+		return s.blockchain.TransferOrgOwner(ctx, p)
+
 	// ── Verifiable Credentials ─────────────────────────────────────
 	case domain.EventTypeIssueCredential:
 		var p domain.IssueCredentialPayload

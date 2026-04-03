@@ -149,23 +149,91 @@ env:
 ## Running Tests
 
 ```bash
-make test       # all tests with race detector
-make cover      # coverage HTML report → coverage.html
+make test
+make cover
+```
+
+## Integration Guide
+
+Events are sent to the worker via **Redis Streams**. Each stream entry must contain a `payload` field with a JSON string representing the event.
+
+### Message Format
+
+```bash
+# XADD <stream_name> * payload <json_event>
+XADD hara.events * payload '{"id": "uuid-123", "type": "CREATE_DID", "payload": {"did": "did:hara:123", "target_address": "0x..."}}'
+```
+
+### Event Payload Examples
+
+#### DID: Create New DID
+```json
+{
+  "id": "evt_01",
+  "type": "CREATE_DID",
+  "payload": {
+    "did": "did:hara:user_01",
+    "target_address": "0x123...",
+    "multiple_rpc_calls": false
+  }
+}
+```
+
+#### VC: Issue Credential
+```json
+{
+  "id": "evt_02",
+  "type": "ISSUE_CREDENTIAL",
+  "payload": {
+    "option": 1,
+    "did_recipient": "did:hara:user_01",
+    "issuer": "0xIssuer...",
+    "expired_at": 1735689600,
+    "offchain_hash": "0xHash...",
+    "target_address": "0x123..."
+  }
+}
+```
+
+#### Alias: Register Domain
+```json
+{
+  "id": "evt_03",
+  "type": "REGISTER_DOMAIN",
+  "payload": {
+    "node": "0xNodeHash...",
+    "label": "my-domain",
+    "duration": 31536000,
+    "target_address": "0x123..."
+  }
+}
+```
+
+#### Org: Add Member
+```json
+{
+  "id": "evt_04",
+  "type": "ADD_MEMBER",
+  "payload": {
+    "org_did_index": 5,
+    "data": "0xEncodedMemberData...",
+    "target_address": "0x123..."
+  }
+}
 ```
 
 ---
 
 ## Architecture Decisions
 
-**SDK Isolation**: The `internal/sdk/` directory is the **only** entry point for third-party SDK dependencies (DID, VC, Alias, AA). The rest of the application interacts with the blockchain via a high-level `BlockchainService` interface, ensuring that business logic remains independent of specific SDK implementations.
+**SDK Isolation**: The `internal/sdk/` directory is the **only** entry point for third-party SDK dependencies (DID, VC, Alias, AA). The rest of the application interacts with the blockchain via a high-level `BlockchainService` interface.
 
-**Composite SDK Pattern**: A `CompositeAdapter` acts as a router, delegating jobs to specific SDK adapters based on the event type. This allows the system to scale its capabilities (e.g., adding a new credential type) by simply adding a new adapter without modifying the core worker loop.
+**Composite SDK Pattern**: A `CompositeAdapter` acts as a router, delegating jobs to specific SDK adapters based on the event type.
 
-**Account Abstraction (AA) Integration**: All write operations follow an **Encode-then-Dispatch** pattern. Specific adapters (DID, VC, Alias) encode their parameters into binary calldata, which is then passed to the `AAAdapter`. The `AAAdapter` dispatches these through the EntryPoint's `HandleOps`, centralizing gas management and wallet abstraction.
+**Account Abstraction (AA) Integration**: All write operations follow an **Encode-then-Dispatch** pattern. Specific adapters (DID, VC, Alias) encode their parameters into binary calldata, which is then passed to the `AAAdapter`.
 
-**HNS-Only Configuration**: We've eliminated manual contract addresses and ABIs in favor of a **Handshake (HNS)** resolution model. This ensures that the worker always resolves the correct contract instances at runtime, reducing configuration errors and simplifying deployments across different environments (dev/test/prod).
+**HNS-Only Configuration**: This project exclusively uses **Handshake (HNS)** for contract resolution. There are no hardcoded addresses or manual ABI configurations.
 
-**Event Idempotency**: To prevent double-processing of events, we combine an application-level check with a database-level `unique_event_id` constraint. Each job is tracked in PostgreSQL, and once successful, it cannot be re-executed.
+**Event Idempotency**: To prevent double-processing of events, we combine an application-level check with a database-level `unique_event_id` constraint.
 
-**ACK-after-Success/DLQ Policy**: Messages are only acknowledged in Redis after a successful blockchain transaction or after being successfully pushed to the Dead Letter Queue (DLQ). This guarantees no events are lost due to transient failures or logic errors.
-
+**ACK-after-Success/DLQ Policy**: Messages are only acknowledged in Redis after a successful blockchain transaction or after being successfully pushed to the Dead Letter Queue (DLQ).
