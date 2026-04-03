@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HARA-DID/did_queueing_engine/pkg"
+	"github.com/HARA-DID/did-queueing-engine/pkg"
 )
 
 var errTransient = errors.New("transient error")

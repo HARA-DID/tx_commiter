@@ -23,7 +23,7 @@ linters-settings:
   exhaustive:
     default-signifies-exhaustive: true
   goimports:
-    local-prefixes: github.com/HARA-DID/did_queueing_engine
+    local-prefixes: github.com/HARA-DID/did-queueing-engine
 
 issues:
   exclude-rules:

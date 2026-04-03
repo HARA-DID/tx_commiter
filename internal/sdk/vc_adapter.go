@@ -9,8 +9,8 @@ import (
 	vcstor "github.com/HARA-DID/did-verifiable-credentials-sdk/pkg/vcstorage"
 	harautils "github.com/HARA-DID/hara-core-blockchain-lib/utils"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/config"
-	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did-queueing-engine/internal/config"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 )
 
 // VCAdapter implements Verifiable Credentials related blockchain operations.

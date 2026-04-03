@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/domain"
-	"github.com/HARA-DID/did_queueing_engine/internal/service"
-	"github.com/HARA-DID/did_queueing_engine/pkg"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain"
+	"github.com/HARA-DID/did-queueing-engine/internal/service"
+	"github.com/HARA-DID/did-queueing-engine/pkg"
 	"github.com/sirupsen/logrus"
 )
 

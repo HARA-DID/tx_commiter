@@ -8,8 +8,8 @@ import (
 	aliasstor "github.com/HARA-DID/alias-root-sdk/pkg/aliasstorage"
 	harautils "github.com/HARA-DID/hara-core-blockchain-lib/utils"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/config"
-	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did-queueing-engine/internal/config"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 )
 
 // AliasAdapter implements Alias related blockchain operations.

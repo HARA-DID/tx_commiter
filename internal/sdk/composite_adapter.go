@@ -3,8 +3,8 @@ package sdk
 import (
 	"context"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/domain"
-	"github.com/HARA-DID/did_queueing_engine/internal/service"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain"
+	"github.com/HARA-DID/did-queueing-engine/internal/service"
 )
 
 var _ service.BlockchainService = (*CompositeAdapter)(nil)

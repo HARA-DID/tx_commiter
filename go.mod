@@ -1,4 +1,4 @@
-module github.com/HARA-DID/did_queueing_engine
+module github.com/HARA-DID/did-queueing-engine
 
 go 1.25.5
 

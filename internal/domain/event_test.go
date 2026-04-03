@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 )
 
 func TestEventType_IsValid(t *testing.T) {

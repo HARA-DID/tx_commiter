@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/config"
-	redisinfra "github.com/HARA-DID/did_queueing_engine/internal/infra/redis"
-	"github.com/HARA-DID/did_queueing_engine/pkg"
+	"github.com/HARA-DID/did-queueing-engine/internal/config"
+	redisinfra "github.com/HARA-DID/did-queueing-engine/internal/infra/redis"
+	"github.com/HARA-DID/did-queueing-engine/pkg"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
 )

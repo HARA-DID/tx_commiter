@@ -10,8 +10,8 @@ import (
 	"github.com/HARA-DID/account-abstraction-sdk/pkg/walletfactory"
 	harautils "github.com/HARA-DID/hara-core-blockchain-lib/utils"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/config"
-	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did-queueing-engine/internal/config"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 )
 
 // AAAdapter implements Account Abstraction related blockchain operations.

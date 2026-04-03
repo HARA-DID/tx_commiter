@@ -10,7 +10,7 @@ import (
 	harawallet "github.com/HARA-DID/hara-core-blockchain-lib/pkg/wallet"
 	harautils "github.com/HARA-DID/hara-core-blockchain-lib/utils"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/config"
+	"github.com/HARA-DID/did-queueing-engine/internal/config"
 )
 
 // Provider holds the shared blockchain infrastructure components.

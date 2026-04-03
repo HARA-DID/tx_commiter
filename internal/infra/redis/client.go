@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/HARA-DID/did_queueing_engine/internal/config"
+	"github.com/HARA-DID/did-queueing-engine/internal/config"
 	"github.com/redis/go-redis/v9"
 )
 
