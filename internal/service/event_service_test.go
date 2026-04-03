@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/myorg/worker-service/internal/domain"
-	"github.com/myorg/worker-service/internal/mocks"
-	"github.com/myorg/worker-service/internal/service"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/mocks"
+	"github.com/HARA-DID/did_queueing_engine/internal/service"
 	"github.com/sirupsen/logrus"
 )
 

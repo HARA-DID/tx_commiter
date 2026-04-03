@@ -6,8 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/myorg/worker-service/internal/domain"
-	"github.com/myorg/worker-service/internal/repository"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/repository"
 )
 
 // Ensure interface satisfaction at compile time.
@@ -19,9 +19,9 @@ type MockJobRepository struct {
 	jobs map[string]*domain.Job // keyed by event_id
 
 	// Hooks for injecting errors in specific tests.
-	CreateErr        error
-	FindByEventIDErr error
-	UpdateStatusErr  error
+	CreateErr         error
+	FindByEventIDErr  error
+	UpdateStatusErr   error
 	IncrementRetryErr error
 }
 

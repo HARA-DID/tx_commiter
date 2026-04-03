@@ -8,8 +8,8 @@ import (
 	didfactory "github.com/HARA-DID/did-root-sdk/pkg/factory"
 	harautils "github.com/meQlause/hara-core-blockchain-lib/utils"
 
-	"github.com/myorg/worker-service/internal/config"
-	"github.com/myorg/worker-service/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/config"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
 )
 
 type DIDAdapter struct {
@@ -55,7 +55,7 @@ func (a *DIDAdapter) EncodeAddKey(p domain.AddKeyPayload) ([]byte, error) {
 	argBuilder := a.provider.Network.ArgBuilder().
 		Type("uint256").Value(p.DIDIndex).
 		Type("bytes32").Value(keyHashed).
-		Type("string").Value(""). 
+		Type("string").Value("").
 		Type("uint8").Value(p.Purpose).
 		Type("uint8").Value(p.KeyType)
 	data := harautils.EncodeArgs(argBuilder)

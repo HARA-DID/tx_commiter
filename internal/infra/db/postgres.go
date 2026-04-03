@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/myorg/worker-service/internal/domain"
-	"github.com/myorg/worker-service/internal/repository"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/repository"
 
 	// PostgreSQL driver
 	_ "github.com/lib/pq"

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/myorg/worker-service/internal/config"
+	"github.com/HARA-DID/did_queueing_engine/internal/config"
 )
 
 // Connect opens a PostgreSQL connection pool using the given config.

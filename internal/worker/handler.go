@@ -6,18 +6,18 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/myorg/worker-service/internal/domain"
-	"github.com/myorg/worker-service/internal/service"
-	"github.com/myorg/worker-service/pkg"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/service"
+	"github.com/HARA-DID/did_queueing_engine/pkg"
 	"github.com/sirupsen/logrus"
 )
 
 // Handler processes a single Redis stream message.
 type Handler struct {
-	eventSvc    *service.EventService
-	retryCfg    pkg.RetryConfig
-	metrics     *pkg.Metrics
-	log         *logrus.Logger
+	eventSvc *service.EventService
+	retryCfg pkg.RetryConfig
+	metrics  *pkg.Metrics
+	log      *logrus.Logger
 }
 
 func NewHandler(
@@ -42,7 +42,7 @@ func (h *Handler) Handle(ctx context.Context, msgID string, values map[string]in
 	if err != nil {
 		h.log.WithError(err).WithField("msg_id", msgID).Error("failed to parse event; will ACK to avoid poison pill")
 		h.metrics.EventsProcessed.WithLabelValues("failed").Inc()
-		return true 
+		return true
 	}
 
 	log := h.log.WithFields(logrus.Fields{
@@ -71,7 +71,7 @@ func (h *Handler) Handle(ctx context.Context, msgID string, values map[string]in
 		}
 		if service.IsAlreadyProcessed(processErr) {
 			lastErr = processErr
-			return nil 
+			return nil
 		}
 		lastErr = processErr
 		return processErr
@@ -89,7 +89,7 @@ func (h *Handler) Handle(ctx context.Context, msgID string, values map[string]in
 	if retryErr != nil {
 		log.WithError(retryErr).Error("event failed after all retries")
 		h.metrics.EventsProcessed.WithLabelValues("failed").Inc()
-		return false 
+		return false
 	}
 
 	h.metrics.EventsProcessed.WithLabelValues("success").Inc()

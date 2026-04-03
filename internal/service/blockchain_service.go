@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 
-	"github.com/myorg/worker-service/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
 )
 
 type BlockchainService interface {

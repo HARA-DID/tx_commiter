@@ -10,7 +10,7 @@ import (
 	harawallet "github.com/meQlause/hara-core-blockchain-lib/pkg/wallet"
 	harautils "github.com/meQlause/hara-core-blockchain-lib/utils"
 
-	"github.com/myorg/worker-service/internal/config"
+	"github.com/HARA-DID/did_queueing_engine/internal/config"
 )
 
 // Provider holds the shared blockchain infrastructure components.
@@ -27,8 +27,8 @@ func NewProvider(cfg config.BlockchainConfig) (*Provider, error) {
 	network := haranetwork.NewNetwork(
 		cfg.RPCURLs,
 		"1.0",
-		0,                       
-		harautils.LogConfig{},  
+		0,
+		harautils.LogConfig{},
 	)
 
 	if !network.IsOnline(initCtx) {

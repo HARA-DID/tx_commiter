@@ -9,13 +9,13 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/sirupsen/logrus"
 
-	"github.com/myorg/worker-service/internal/config"
-	infradb "github.com/myorg/worker-service/internal/infra/db"
-	redisinfra "github.com/myorg/worker-service/internal/infra/redis"
-	"github.com/myorg/worker-service/internal/sdk"
-	"github.com/myorg/worker-service/internal/service"
-	"github.com/myorg/worker-service/internal/worker"
-	"github.com/myorg/worker-service/pkg"
+	"github.com/HARA-DID/did_queueing_engine/internal/config"
+	infradb "github.com/HARA-DID/did_queueing_engine/internal/infra/db"
+	redisinfra "github.com/HARA-DID/did_queueing_engine/internal/infra/redis"
+	"github.com/HARA-DID/did_queueing_engine/internal/sdk"
+	"github.com/HARA-DID/did_queueing_engine/internal/service"
+	"github.com/HARA-DID/did_queueing_engine/internal/worker"
+	"github.com/HARA-DID/did_queueing_engine/pkg"
 )
 
 func main() {

@@ -6,11 +6,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/myorg/worker-service/internal/domain"
-	"github.com/myorg/worker-service/internal/mocks"
-	"github.com/myorg/worker-service/internal/service"
-	"github.com/myorg/worker-service/internal/worker"
-	"github.com/myorg/worker-service/pkg"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/mocks"
+	"github.com/HARA-DID/did_queueing_engine/internal/service"
+	"github.com/HARA-DID/did_queueing_engine/internal/worker"
+	"github.com/HARA-DID/did_queueing_engine/pkg"
 	"github.com/sirupsen/logrus"
 )
 

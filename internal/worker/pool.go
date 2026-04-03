@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/HARA-DID/did_queueing_engine/internal/config"
+	redisinfra "github.com/HARA-DID/did_queueing_engine/internal/infra/redis"
+	"github.com/HARA-DID/did_queueing_engine/pkg"
 	"github.com/redis/go-redis/v9"
-	redisinfra "github.com/myorg/worker-service/internal/infra/redis"
-	"github.com/myorg/worker-service/internal/config"
-	"github.com/myorg/worker-service/pkg"
 	"github.com/sirupsen/logrus"
 )
 

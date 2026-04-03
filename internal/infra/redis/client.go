@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/HARA-DID/did_queueing_engine/internal/config"
 	"github.com/redis/go-redis/v9"
-	"github.com/myorg/worker-service/internal/config"
 )
 
 // NewClient creates a Redis client from config.

@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/myorg/worker-service/internal/domain"
-	"github.com/myorg/worker-service/internal/service"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/service"
 )
 
 var _ service.BlockchainService = (*MockBlockchainService)(nil)
@@ -24,17 +24,17 @@ type MockBlockchainService struct {
 	AddClaimFn         func(ctx context.Context, p domain.AddClaimPayload) (*domain.BlockchainResult, error)
 	StoreDataFn        func(ctx context.Context, p domain.StoreDataPayload) (*domain.BlockchainResult, error)
 	UpdateDIDFn        func(ctx context.Context, p domain.UpdateDIDPayload) (*domain.BlockchainResult, error)
-	DeactivateDIDFn     func(ctx context.Context, p domain.DIDLifecyclePayload) (*domain.BlockchainResult, error)
-	ReactivateDIDFn     func(ctx context.Context, p domain.DIDLifecyclePayload) (*domain.BlockchainResult, error)
-	TransferDIDOwnerFn  func(ctx context.Context, p domain.TransferDIDOwnerPayload) (*domain.BlockchainResult, error)
+	DeactivateDIDFn    func(ctx context.Context, p domain.DIDLifecyclePayload) (*domain.BlockchainResult, error)
+	ReactivateDIDFn    func(ctx context.Context, p domain.DIDLifecyclePayload) (*domain.BlockchainResult, error)
+	TransferDIDOwnerFn func(ctx context.Context, p domain.TransferDIDOwnerPayload) (*domain.BlockchainResult, error)
 	DeleteDataFn       func(ctx context.Context, p domain.DeleteDataPayload) (*domain.BlockchainResult, error)
 	RemoveKeyFn        func(ctx context.Context, p domain.RemoveKeyPayload) (*domain.BlockchainResult, error)
 	RemoveClaimFn      func(ctx context.Context, p domain.RemoveClaimPayload) (*domain.BlockchainResult, error)
 	GeneralExecuteFn   func(ctx context.Context, p domain.GeneralExecutePayload) (*domain.BlockchainResult, error)
 	CreateOrgFn        func(ctx context.Context, p domain.CreateOrgPayload) (*domain.BlockchainResult, error)
-	DeactivateOrgFn     func(ctx context.Context, p domain.OrgLifecyclePayload) (*domain.BlockchainResult, error)
-	ReactivateOrgFn     func(ctx context.Context, p domain.OrgLifecyclePayload) (*domain.BlockchainResult, error)
-	TransferOrgOwnerFn  func(ctx context.Context, p domain.OrgTransferPayload) (*domain.BlockchainResult, error)
+	DeactivateOrgFn    func(ctx context.Context, p domain.OrgLifecyclePayload) (*domain.BlockchainResult, error)
+	ReactivateOrgFn    func(ctx context.Context, p domain.OrgLifecyclePayload) (*domain.BlockchainResult, error)
+	TransferOrgOwnerFn func(ctx context.Context, p domain.OrgTransferPayload) (*domain.BlockchainResult, error)
 	AddMemberFn        func(ctx context.Context, p domain.OrgMemberPayload) (*domain.BlockchainResult, error)
 	RemoveMemberFn     func(ctx context.Context, p domain.OrgMemberPayload) (*domain.BlockchainResult, error)
 	UpdateMemberFn     func(ctx context.Context, p domain.OrgMemberPayload) (*domain.BlockchainResult, error)
@@ -46,23 +46,23 @@ type MockBlockchainService struct {
 	BurnCredentialFn       func(ctx context.Context, p domain.BurnCredentialPayload) (*domain.BlockchainResult, error)
 	UpdateMetadataFn       func(ctx context.Context, p domain.UpdateMetadataPayload) (*domain.BlockchainResult, error)
 	RevokeCredentialFn     func(ctx context.Context, p domain.RevokeCredentialPayload) (*domain.BlockchainResult, error)
-	ApproveCredentialOrgFn  func(ctx context.Context, p domain.ApproveCredentialOrgPayload) (*domain.BlockchainResult, error)
-	ApproveCredentialFn     func(ctx context.Context, p domain.ApproveCredentialPayload) (*domain.BlockchainResult, error)
+	ApproveCredentialOrgFn func(ctx context.Context, p domain.ApproveCredentialOrgPayload) (*domain.BlockchainResult, error)
+	ApproveCredentialFn    func(ctx context.Context, p domain.ApproveCredentialPayload) (*domain.BlockchainResult, error)
 	SetDidRootStorageFn    func(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error)
 	SetDidOrgStorageFn     func(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error)
 
-	RegisterTLDFn           func(ctx context.Context, p domain.RegisterTLDPayload) (*domain.BlockchainResult, error)
-	RegisterDomainFn        func(ctx context.Context, p domain.RegisterDomainPayload) (*domain.BlockchainResult, error)
-	SetDIDAliasFn          func(ctx context.Context, p domain.SetDIDAliasPayload) (*domain.BlockchainResult, error)
-	SetDIDOrgAliasFn       func(ctx context.Context, p domain.SetDIDOrgAliasPayload) (*domain.BlockchainResult, error)
-	ExtendRegistrationFn    func(ctx context.Context, p domain.ExtendRegistrationPayload) (*domain.BlockchainResult, error)
-	RevokeAliasFn           func(ctx context.Context, p domain.RevokeAliasPayload) (*domain.BlockchainResult, error)
-	UnrevokeAliasFn         func(ctx context.Context, p domain.UnrevokeAliasPayload) (*domain.BlockchainResult, error)
-	RegisterSubdomainFn     func(ctx context.Context, p domain.RegisterSubdomainPayload) (*domain.BlockchainResult, error)
+	RegisterTLDFn            func(ctx context.Context, p domain.RegisterTLDPayload) (*domain.BlockchainResult, error)
+	RegisterDomainFn         func(ctx context.Context, p domain.RegisterDomainPayload) (*domain.BlockchainResult, error)
+	SetDIDAliasFn            func(ctx context.Context, p domain.SetDIDAliasPayload) (*domain.BlockchainResult, error)
+	SetDIDOrgAliasFn         func(ctx context.Context, p domain.SetDIDOrgAliasPayload) (*domain.BlockchainResult, error)
+	ExtendRegistrationFn     func(ctx context.Context, p domain.ExtendRegistrationPayload) (*domain.BlockchainResult, error)
+	RevokeAliasFn            func(ctx context.Context, p domain.RevokeAliasPayload) (*domain.BlockchainResult, error)
+	UnrevokeAliasFn          func(ctx context.Context, p domain.UnrevokeAliasPayload) (*domain.BlockchainResult, error)
+	RegisterSubdomainFn      func(ctx context.Context, p domain.RegisterSubdomainPayload) (*domain.BlockchainResult, error)
 	TransferAliasOwnershipFn func(ctx context.Context, p domain.TransferAliasOwnershipPayload) (*domain.BlockchainResult, error)
-	TransferTLDFn           func(ctx context.Context, p domain.TransferTLDPayload) (*domain.BlockchainResult, error)
-	SetAliasRootStorageFn   func(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
-	SetAliasOrgStorageFn    func(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
+	TransferTLDFn            func(ctx context.Context, p domain.TransferTLDPayload) (*domain.BlockchainResult, error)
+	SetAliasRootStorageFn    func(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
+	SetAliasOrgStorageFn     func(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
 	SetFactoryContractFn     func(ctx context.Context, p domain.SetFactoryContractPayload) (*domain.BlockchainResult, error)
 }
 

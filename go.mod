@@ -1,4 +1,4 @@
-module github.com/myorg/worker-service
+module github.com/HARA-DID/did_queueing_engine
 
 go 1.25.5
 

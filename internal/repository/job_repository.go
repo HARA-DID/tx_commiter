@@ -3,7 +3,7 @@ package repository
 import (
 	"context"
 
-	"github.com/myorg/worker-service/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
 )
 
 // JobRepository defines persistence operations for jobs.

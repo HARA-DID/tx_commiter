@@ -6,9 +6,9 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/HARA-DID/did_queueing_engine/internal/domain"
+	"github.com/HARA-DID/did_queueing_engine/internal/repository"
 	"github.com/google/uuid"
-	"github.com/myorg/worker-service/internal/domain"
-	"github.com/myorg/worker-service/internal/repository"
 	"github.com/sirupsen/logrus"
 )
 
