@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/HARA-DID/did-queueing-engine/internal/config"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 	redisinfra "github.com/HARA-DID/did-queueing-engine/internal/infra/redis"
+	"github.com/HARA-DID/did-queueing-engine/internal/repository"
 	"github.com/HARA-DID/did-queueing-engine/pkg"
 	"github.com/redis/go-redis/v9"
 	"github.com/sirupsen/logrus"
@@ -18,6 +20,7 @@ import (
 type Pool struct {
 	client   *redis.Client
 	handler  *Handler
+	jobRepo  repository.JobRepository
 	cfg      config.WorkerConfig
 	redisCfg config.RedisConfig
 	metrics  *pkg.Metrics
@@ -27,6 +30,7 @@ type Pool struct {
 func NewPool(
 	client *redis.Client,
 	handler *Handler,
+	jobRepo repository.JobRepository,
 	cfg config.WorkerConfig,
 	redisCfg config.RedisConfig,
 	metrics *pkg.Metrics,
@@ -35,6 +39,7 @@ func NewPool(
 	return &Pool{
 		client:   client,
 		handler:  handler,
+		jobRepo:  jobRepo,
 		cfg:      cfg,
 		redisCfg: redisCfg,
 		metrics:  metrics,
@@ -134,10 +139,24 @@ func (p *Pool) processMessage(ctx context.Context, msg redis.XMessage) {
 		return
 	}
 
-	// Handler returned false → push to DLQ.
+	// Handler returned false → push to DLQ (Redis + DB).
 	payload, _ := json.Marshal(msg.Values)
-	if err := redisinfra.PushToDLQ(ctx, p.client, p.redisCfg.DLQStreamName(), msg.ID, string(payload)); err != nil {
-		log.WithError(err).Error("failed to push message to DLQ")
+	rawPayload := string(payload)
+
+	if event, err := ParseEvent(msg.Values); err == nil {
+		dlqErr := p.jobRepo.SaveToDLQ(ctx, &domain.DLQEvent{
+			EventID:      event.ID,
+			Type:         string(event.Type),
+			Payload:      rawPayload,
+			ErrorMessage: "failed after all retries",
+		})
+		if dlqErr != nil {
+			log.WithError(dlqErr).Error("failed to save to DB DLQ")
+		}
+	}
+
+	if err := redisinfra.PushToDLQ(ctx, p.client, p.redisCfg.DLQStreamName(), msg.ID, rawPayload); err != nil {
+		log.WithError(err).Error("failed to push message to Redis DLQ")
 	} else {
 		p.metrics.EventsDLQ.Inc()
 		log.Warn("message pushed to DLQ")

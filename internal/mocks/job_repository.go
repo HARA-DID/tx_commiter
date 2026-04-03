@@ -23,11 +23,17 @@ type MockJobRepository struct {
 	FindByEventIDErr  error
 	UpdateStatusErr   error
 	IncrementRetryErr error
+	SaveToDLQErr      error
+
+	dlqs []*domain.DLQEvent
 }
 
 // NewMockJobRepository constructs an empty mock repository.
 func NewMockJobRepository() *MockJobRepository {
-	return &MockJobRepository{jobs: make(map[string]*domain.Job)}
+	return &MockJobRepository{
+		jobs: make(map[string]*domain.Job),
+		dlqs: make([]*domain.DLQEvent, 0),
+	}
 }
 
 func (m *MockJobRepository) Create(ctx context.Context, job *domain.Job) error {
@@ -103,6 +109,32 @@ func (m *MockJobRepository) IncrementRetry(ctx context.Context, jobID string, er
 		}
 	}
 	return fmt.Errorf("mock: job not found: %s", jobID)
+}
+
+func (m *MockJobRepository) SaveToDLQ(ctx context.Context, event *domain.DLQEvent) error {
+	if m.SaveToDLQErr != nil {
+		return m.SaveToDLQErr
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	copy := *event
+	copy.CreatedAt = time.Now().UTC()
+	m.dlqs = append(m.dlqs, &copy)
+	return nil
+}
+
+// DLQs returns every stored DLQ event (useful for assertions).
+func (m *MockJobRepository) DLQs() []*domain.DLQEvent {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	result := make([]*domain.DLQEvent, 0, len(m.dlqs))
+	for _, e := range m.dlqs {
+		copy := *e
+		result = append(result, &copy)
+	}
+	return result
 }
 
 // All returns every stored job (useful for assertions).

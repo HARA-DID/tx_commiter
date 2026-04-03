@@ -81,6 +81,15 @@ type Job struct {
 	UpdatedAt    time.Time `db:"updated_at"`
 }
 
+type DLQEvent struct {
+	ID           int64     `db:"id"`
+	EventID      string    `db:"event_id"`
+	Type         string    `db:"type"`
+	Payload      string    `db:"payload"` // Raw JSON
+	ErrorMessage string    `db:"error_message"`
+	CreatedAt    time.Time `db:"created_at"`
+}
+
 // ---------------------------------------------------------------------------
 // Blockchain result
 // ---------------------------------------------------------------------------

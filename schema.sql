@@ -16,3 +16,17 @@ CREATE TABLE IF NOT EXISTS jobs (
 -- Indexes for performance
 CREATE INDEX IF NOT EXISTS idx_jobs_event_id ON jobs (event_id);
 CREATE INDEX IF NOT EXISTS idx_jobs_status   ON jobs (status);
+
+-- DLQ Events table for long-term storage of failures.
+-- This helps us keep Redis memory usage low while still having an audit trail.
+CREATE TABLE IF NOT EXISTS dlq_events (
+    id            BIGSERIAL PRIMARY KEY,
+    event_id      TEXT NOT NULL,
+    type          TEXT NOT NULL,
+    payload       TEXT NOT NULL, -- Raw JSON payload
+    error_message TEXT NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL
+);
+
+-- Index for locating failures by event ID
+CREATE INDEX IF NOT EXISTS idx_dlq_events_event_id ON dlq_events (event_id);

@@ -128,6 +128,24 @@ func (r *PostgresJobRepository) IncrementRetry(ctx context.Context, jobID string
 	return nil
 }
 
+func (r *PostgresJobRepository) SaveToDLQ(ctx context.Context, event *domain.DLQEvent) error {
+	const q = `
+		INSERT INTO dlq_events (event_id, type, payload, error_message, created_at)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+	_, err := r.db.ExecContext(ctx, q,
+		event.EventID,
+		event.Type,
+		event.Payload,
+		event.ErrorMessage,
+		time.Now().UTC(),
+	)
+	if err != nil {
+		return fmt.Errorf("postgres save to dlq: %w", err)
+	}
+	return nil
+}
+
 // ---------------------------------------------------------------------------
 // Helpers for PostgreSQL text[] serialization
 // ---------------------------------------------------------------------------

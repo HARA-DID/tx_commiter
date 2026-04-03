@@ -34,11 +34,11 @@ func NewHandler(
 	}
 }
 
-func (h *Handler) Handle(ctx context.Context, msgID string, values map[string]interface{}) (ack bool) {
+func (h *Handler) Handle(ctx context.Context, msgID string, values map[string]any) (ack bool) {
 	start := time.Now()
 	h.metrics.EventsReceived.Inc()
 
-	event, err := parseEvent(values)
+	event, err := ParseEvent(values)
 	if err != nil {
 		h.log.WithError(err).WithField("msg_id", msgID).Error("failed to parse event; will ACK to avoid poison pill")
 		h.metrics.EventsProcessed.WithLabelValues("failed").Inc()
@@ -96,7 +96,7 @@ func (h *Handler) Handle(ctx context.Context, msgID string, values map[string]in
 	return true
 }
 
-func parseEvent(values map[string]interface{}) (*domain.Event, error) {
+func ParseEvent(values map[string]interface{}) (*domain.Event, error) {
 	raw, ok := values["data"]
 	if !ok {
 		return nil, fmt.Errorf("stream message missing 'data' field")

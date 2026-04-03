@@ -101,7 +101,7 @@ func main() {
 	handler := worker.NewHandler(eventSvc, retryCfg, metrics, log)
 
 	// ── Worker pool ────────────────────────────────────────────────────────
-	pool := worker.NewPool(redisClient, handler, cfg.Worker, cfg.Redis, metrics, log)
+	pool := worker.NewPool(redisClient, handler, jobRepo, cfg.Worker, cfg.Redis, metrics, log)
 
 	// ── HTTP server (health + metrics) ─────────────────────────────────────
 	httpSrv := worker.NewHTTPServer(cfg.Server.Port, log)

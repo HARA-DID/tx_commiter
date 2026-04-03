@@ -33,6 +33,8 @@ func EnsureConsumerGroup(ctx context.Context, client *redis.Client, stream, grou
 func PushToDLQ(ctx context.Context, client *redis.Client, dlqStream, eventID, payload string) error {
 	return client.XAdd(ctx, &redis.XAddArgs{
 		Stream: dlqStream,
+		MaxLen: 10000, // Optimize cost/memory: keep only last 10k failed events
+		Approx: true,  // Efficiently trim the stream without blocking
 		Values: map[string]interface{}{
 			"event_id": eventID,
 			"payload":  payload,
