@@ -49,8 +49,9 @@ type MockBlockchainService struct {
 	RegisterSubdomainFn    func(ctx context.Context, p domain.RegisterSubdomainPayload) (*domain.BlockchainResult, error)
 	TransferAliasOwnershipFn func(ctx context.Context, p domain.TransferAliasOwnershipPayload) (*domain.BlockchainResult, error)
 	TransferTLDFn          func(ctx context.Context, p domain.TransferTLDPayload) (*domain.BlockchainResult, error)
-	SetAliasRootStorageFn  func(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error)
-	SetAliasOrgStorageFn   func(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error)
+	SetAliasRootStorageFn  func(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
+	SetAliasOrgStorageFn   func(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
+	SetFactoryContractFn    func(ctx context.Context, p domain.SetFactoryContractPayload) (*domain.BlockchainResult, error)
 }
 
 func (m *MockBlockchainService) CreateDID(ctx context.Context, p domain.CreateDIDPayload) (*domain.BlockchainResult, error) {
@@ -317,7 +318,7 @@ func (m *MockBlockchainService) TransferTLD(ctx context.Context, p domain.Transf
 	return &domain.BlockchainResult{TxHashes: []string{"0xMOCK_TRANSFER_TLD"}}, nil
 }
 
-func (m *MockBlockchainService) SetAliasRootStorage(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error) {
+func (m *MockBlockchainService) SetAliasRootStorage(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error) {
 	m.mu.Lock()
 	m.Calls = append(m.Calls, Call{Method: "SetAliasRootStorage", Payload: p})
 	m.mu.Unlock()
@@ -328,7 +329,7 @@ func (m *MockBlockchainService) SetAliasRootStorage(ctx context.Context, p domai
 	return &domain.BlockchainResult{TxHashes: []string{"0xMOCK_SET_ALIAS_ROOT_STORAGE"}}, nil
 }
 
-func (m *MockBlockchainService) SetAliasOrgStorage(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error) {
+func (m *MockBlockchainService) SetAliasOrgStorage(ctx context.Context, p domain.SetAliasAddressPayload) (*domain.BlockchainResult, error) {
 	m.mu.Lock()
 	m.Calls = append(m.Calls, Call{Method: "SetAliasOrgStorage", Payload: p})
 	m.mu.Unlock()
@@ -337,6 +338,17 @@ func (m *MockBlockchainService) SetAliasOrgStorage(ctx context.Context, p domain
 		return m.SetAliasOrgStorageFn(ctx, p)
 	}
 	return &domain.BlockchainResult{TxHashes: []string{"0xMOCK_SET_ALIAS_ORG_STORAGE"}}, nil
+}
+
+func (m *MockBlockchainService) SetFactoryContract(ctx context.Context, p domain.SetFactoryContractPayload) (*domain.BlockchainResult, error) {
+	m.mu.Lock()
+	m.Calls = append(m.Calls, Call{Method: "SetFactoryContract", Payload: p})
+	m.mu.Unlock()
+
+	if m.SetFactoryContractFn != nil {
+		return m.SetFactoryContractFn(ctx, p)
+	}
+	return &domain.BlockchainResult{TxHashes: []string{"0xMOCK_SET_FACTORY_CONTRACT"}}, nil
 }
 
 // CallCount returns how many times the given method was called.

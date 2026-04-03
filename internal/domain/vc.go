@@ -19,36 +19,61 @@ const (
 // VC Payloads
 
 type IssueCredentialPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to vcfactory.IssueCredentialParams
+	TargetAddress    string   `json:"target_address"`
+	Option           uint8    `json:"option"`
+	DIDRecipient     [32]byte `json:"did_recipient"`
+	Issuer           [32]byte `json:"issuer"`
+	ExpiredAt        *big.Int `json:"expired_at"`
+	OffchainHash     [32]byte `json:"offchain_hash"`
+	MerkleTreeRoot   [32]byte `json:"merkle_tree_root"`
+	PublicIdentity   [32]byte `json:"public_identity"`
+	MultipleRPCCalls bool     `json:"multiple_rpc_calls,omitempty"`
 }
 
 type BurnCredentialPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to vcfactory.BurnCredentialParams
+	TargetAddress    string   `json:"target_address"`
+	Option           uint8    `json:"option"`
+	DID              [32]byte `json:"did"`
+	TokenID          *big.Int `json:"token_id"`
+	MultipleRPCCalls bool     `json:"multiple_rpc_calls,omitempty"`
 }
 
 type UpdateMetadataPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to vcfactory.UpdateMetadataParams
+	TargetAddress    string   `json:"target_address"`
+	Option           uint8    `json:"option"`
+	TokenID          *big.Int `json:"token_id"`
+	ExpiredAt        *big.Int `json:"expired_at"`
+	OffchainHash     [32]byte `json:"offchain_hash"`
+	MultipleRPCCalls bool     `json:"multiple_rpc_calls,omitempty"`
 }
 
 type RevokeCredentialPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to vcfactory.RevokeCredentialParams
+	TargetAddress    string   `json:"target_address"`
+	Option           uint8    `json:"option"`
+	TokenID          *big.Int `json:"token_id"`
+	MultipleRPCCalls bool     `json:"multiple_rpc_calls,omitempty"`
 }
 
 type ApproveCredentialOrgPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to vcfactory.ApproveCredentialOrgParams
+	TargetAddress    string   `json:"target_address"`
+	Option           uint8    `json:"option"`
+	TokenID          *big.Int `json:"token_id"`
+	OrgDIDHash       [32]byte `json:"org_did_hash"`
+	UserDIDHash      [32]byte `json:"user_did_hash"`
+	Signature        []byte   `json:"signature"`
+	MultipleRPCCalls bool     `json:"multiple_rpc_calls,omitempty"`
 }
 
 type ApproveCredentialPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to vcfactory.ApproveCredentialParams
+	TargetAddress    string   `json:"target_address"`
+	Option           uint8    `json:"option"`
+	TokenID          *big.Int `json:"token_id"`
+	Signature        []byte   `json:"signature"`
+	MultipleRPCCalls bool     `json:"multiple_rpc_calls,omitempty"`
 }
 
 type SetAddressPayload struct {
+	TargetAddress    string `json:"target_address"`
 	Address          string `json:"address"`
 	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }

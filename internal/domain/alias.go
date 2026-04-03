@@ -14,56 +14,90 @@ const (
 	EventTypeTransferTLD          EventType = "TRANSFER_TLD"
 	EventTypeSetAliasRootStorage  EventType = "SET_ALIAS_ROOT_STORAGE"
 	EventTypeSetAliasOrgStorage   EventType = "SET_ALIAS_ORG_STORAGE"
+	EventTypeSetFactoryContract    EventType = "SET_FACTORY_CONTRACT"
 )
 
 // Alias Payloads
 
 type RegisterTLDPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.RegisterTLDParams
+	TargetAddress    string `json:"target_address"`
+	TLD              string `json:"tld"`
+	Owner            string `json:"owner"`
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type RegisterDomainPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.RegisterDomainParams
+	TargetAddress    string `json:"target_address"`
+	Label            string `json:"label"`
+	TLD              string `json:"tld"`
+	Period           uint8  `json:"period"` // 0: 1yr, 1: 2yrs, 2: 3yrs
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type SetDIDAliasPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.SetDIDParams
+	TargetAddress    string `json:"target_address"`
+	Name             string `json:"name"`
+	DID              string `json:"did"` // hex string for [32]byte
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type SetDIDOrgAliasPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.SetDIDOrgParams
+	TargetAddress    string `json:"target_address"`
+	Name             string `json:"name"`
+	OrgDIDHash       string `json:"org_did_hash"`  // hex string for [32]byte
+	UserDIDHash      string `json:"user_did_hash"` // hex string for [32]byte
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type ExtendRegistrationPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.ExtendRegistrationParams
+	TargetAddress    string `json:"target_address"`
+	Node             string `json:"node"` // hex string for [32]byte
+	Period           uint8  `json:"period"`
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type RevokeAliasPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.NodeOnlyParams
+	TargetAddress    string `json:"target_address"`
+	Node             string `json:"node"` // hex string for [32]byte
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type UnrevokeAliasPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.NodeOnlyParams
+	TargetAddress    string `json:"target_address"`
+	Node             string `json:"node"` // hex string for [32]byte
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type RegisterSubdomainPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.RegisterSubdomainParams
+	TargetAddress    string `json:"target_address"`
+	Label            string `json:"label"`
+	ParentDomain     string `json:"parent_domain"`
+	Period           uint8  `json:"period"`
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type TransferAliasOwnershipPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.TransferAliasOwnershipParams
+	TargetAddress    string `json:"target_address"`
+	Node             string `json:"node"` // hex string for [32]byte
+	NewOwner         string `json:"new_owner"`
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type TransferTLDPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params mapped to aliasfactory.TransferTLDParams
+	TargetAddress    string `json:"target_address"`
+	TLD              string `json:"tld"`
+	NewOwner         string `json:"new_owner"`
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
+}
+
+type SetAliasAddressPayload struct {
+	TargetAddress    string `json:"target_address"`
+	Address          string `json:"address"`
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
+}
+
+type SetFactoryContractPayload struct {
+	TargetAddress    string `json:"target_address"`
+	FactoryContract  string `json:"factory_contract"`
+	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }

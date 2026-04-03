@@ -1,98 +1,87 @@
 # worker-service
 
 A production-ready Go worker that consumes events from **Redis Streams**, stores
-job state in **PostgreSQL**, and executes blockchain transactions via the
-**DID Root SDK** + **Hara Core Blockchain Library**.
+job state in **PostgreSQL**, and executes blockchain transactions via a **Composite SDK Adapter** (DID Root, Verifiable Credentials, Alias) with **Account Abstraction (AA)** routing.
 
 ```
-Redis Stream ──XREADGROUP──► Worker Pool ──► EventService ──► BlockchainAdapter
-                                  │                                    │
-                                  ▼                                    ▼
-                            PostgreSQL (jobs)              did-root-sdk / hara-core
+Redis Stream ──XREADGROUP──► Worker Pool ──► EventService ──► CompositeAdapter ──► SDK Adapters
+                                   │                              │                   (DID/VC/Alias)
+                                   │                              │                    │
+                                   ▼                              ▼                    ▼
+                             PostgreSQL (jobs)              AAAdapter (EntryPoint)  Encode Data
+                                                                  │
+                                                                  ▼
+                                                              Blockchain (Hara Chain)
 ```
 
----
-
-## Folder Structure
+## Folder Structure & File Responsibilities
 
 ```
 .
 ├── cmd/
-│   ├── worker/        # Main entrypoint
-│   └── dlq-reader/    # Ops tool: tails the dead-letter queue
+│   ├── worker/              # Main application entrypoint
+│   └── dlq-reader/          # Ops tool: tracks and reads the dead-letter queue (DLQ)
 │
 ├── internal/
-│   ├── config/        # Env-based configuration + validation
-│   ├── domain/        # Core types: Event, Job, Payloads, Errors
+│   ├── config/              # Env-based configuration
+│   │   └── config.go        # Loads and validates HNS-based variables
+│   │
+│   ├── domain/              # Core business types and payloads (Shared)
+│   │   ├── did.go           # DID Root registry payloads
+│   │   ├── vc.go            # Verifiable Credentials payloads
+│   │   ├── alias.go         # Alias registration payloads
+│   │   ├── aa.go            # Account Abstraction / HandleOps payloads
+│   │   └── job.go           # Job state and status definitions
+│   │
+│   ├── sdk/                 # Blockchain Integration Layer (The only place SDKs are imported)
+│   │   ├── composite_adapter.go # Routes jobs to the correct SDK adapter
+│   │   ├── did_adapter.go   # DID Root SDK implementation (HNS-only)
+│   │   ├── vc_adapter.go    # VC SDK implementation (HNS-only)
+│   │   ├── alias_adapter.go # Alias SDK implementation (HNS-only)
+│   │   ├── aa_adapter.go    # AA EntryPoint implementation (HandleOps)
+│   │   └── provider.go      # Shared blockchain client/wallet setup
+│   │
+│   ├── service/             # Orchestration Layer
+│   │   ├── event_service.go # Main logic: idempotency -> database -> SDK routing
+│   │   └── blockchain.go    # Generic interface for all blockchain operations
+│   │
 │   ├── infra/
-│   │   ├── db/        # PostgreSQL connection + JobRepository impl + migrations
-│   │   └── redis/     # Redis client, consumer group bootstrap, DLQ push
-│   ├── mocks/         # Test doubles for BlockchainService + JobRepository
-│   ├── repository/    # JobRepository interface (port)
-│   ├── sdk/           # BlockchainAdapter — ONLY place SDK imports appear
-│   ├── service/       # EventService: idempotency → DB → blockchain orchestration
-│   └── worker/        # Handler (parse/validate/retry) + Pool (concurrency loop) + HTTP server
+│   │   ├── db/              # PostgreSQL + JobRepository (persistence)
+│   │   └── redis/           # Redis Stream consumer & DLQ management
+│   │
+│   ├── worker/              # Consumer loop, error handling, and Prometheus metrics
+│   └── mocks/               # Mock implementations for testing
 │
-├── pkg/               # Shared utilities: retry backoff, Prometheus metrics
-│
+├── pkg/                     # Shared utilities (Retry, Metrics)
 ├── Dockerfile
 ├── docker-compose.yml
-├── Makefile
-└── .env.example
+└── .env.example             # Template for all required HNS & infrastructure variables
 ```
 
 ---
 
-## Quick Start
+## HNS Contract Resolution
 
-### 1. Configure
-
-```bash
-cp .env.example .env
-# Edit .env — set REDIS_URL, DB_URL, RPC_URLS, PRIVATE_KEY at minimum
-```
-
-### 2. Start dependencies
-
-```bash
-make docker-up    # starts Redis + PostgreSQL via docker-compose
-```
-
-### 3. Run the worker
-
-```bash
-make run
-```
-
-### 4. Inspect the DLQ
-
-```bash
-make run-dlq
-```
-
----
+This project exclusively uses **Handshake (HNS)** for contract resolution. There are no hardcoded addresses or manual ABI configurations.
+All adapters use `NewXXXWithHNS` or `ContractWithHNS` to resolve dependencies at startup via the `AA_ENTRYPOINT_HNS`, `DID_VC_FACTORY_HNS`, and other HNS environment variables.
 
 ## Environment Variables
 
-| Variable            | Required | Default            | Description                                      |
-|---------------------|----------|--------------------|--------------------------------------------------|
-| `REDIS_URL`         | ✅       | —                  | Redis connection URL                             |
-| `STREAM_NAME`       | ✅       | —                  | Redis stream to consume                          |
-| `GROUP_NAME`        | ✅       | —                  | Consumer group name                              |
-| `DB_URL`            | ✅       | —                  | PostgreSQL DSN                                   |
-| `RPC_URLS`          | ✅       | —                  | Comma-separated blockchain RPC endpoints         |
-| `PRIVATE_KEY`       | ✅       | —                  | Hex-encoded wallet private key                   |
-| `CONSUMER_NAME`     | ❌       | `worker-<hostname>`| Unique consumer identity (set per replica)       |
-| `WORKER_CONCURRENCY`| ❌       | `10`               | Max concurrent goroutines                        |
-| `MAX_RETRY`         | ❌       | `3`                | Max blockchain retry attempts per event          |
-| `RETRY_BASE_DELAY`  | ❌       | `1s`               | Base delay for exponential backoff               |
-| `BATCH_SIZE`        | ❌       | `10`               | Events per XREADGROUP call                       |
-| `POLL_INTERVAL`     | ❌       | `100ms`            | Block timeout for XREADGROUP                     |
-| `SHUTDOWN_TIMEOUT`  | ❌       | `30s`              | Max time to drain in-flight jobs on SIGTERM      |
-| `HNS_NAME`          | ❌       | —                  | HNS contract name (mutually exclusive with ABI)  |
-| `ABI_PATH`          | ❌       | —                  | Path to contract ABI JSON file                   |
-| `DLQ_SUFFIX`        | ❌       | `:dlq`             | Appended to STREAM_NAME to form DLQ stream name  |
-| `SERVER_PORT`       | ❌       | `8080`             | Port for /healthz and /metrics                   |
+| Variable            | Required | Description                                           |
+|---------------------|----------|-------------------------------------------------------|
+| `REDIS_URL`         | ✅       | Redis connection URL                                  |
+| `STREAM_NAME`       | ✅       | Redis stream to consume                               |
+| `GROUP_NAME`        | ✅       | Consumer group name                                   |
+| `DB_URL`            | ✅       | PostgreSQL DSN                                        |
+| `RPC_URLS`          | ✅       | Comma-separated blockchain RPC endpoints              |
+| `PRIVATE_KEY`       | ✅       | Hex-encoded wallet private key                        |
+| `AA_ENTRYPOINT_HNS` | ✅       | HNS URI for the Accountant Abstraction EntryPoint     |
+| `DID_VC_FACTORY_HNS`| ✅       | HNS URI for the Verifiable Credentials Factory        |
+| `DID_ALIAS_FACTORY_HNS`| ✅    | HNS URI for the Alias Factory                         |
+| `DID_ROOT_FACTORY_HNS`| ✅     | HNS URI for the DID Root Factory                      |
+| `WORKER_CONCURRENCY`| ❌       | Max concurrent goroutines (Default: 10)               |
+| `MAX_RETRY`         | ❌       | Max blockchain retry attempts per event (Default: 3) |
+| `SERVER_PORT`       | ❌       | Port for health and metrics (Default: 8080)           |
 
 ---
 
@@ -100,13 +89,14 @@ make run-dlq
 
 For each Redis stream message the worker:
 
-1. **Parses** the raw stream entry into `domain.Event`
-2. **Validates** the event (id present, type recognised, payload non-empty)
-3. **Idempotency check** — queries `jobs` table by `event_id`; skips if already `success`
-4. **Creates** a `pending` job row in PostgreSQL
-5. **Dispatches** to the correct `BlockchainService` method with retry + exponential backoff
-6. **Updates** the job row to `success` (with tx hashes) or `failed` (with error)
-7. **ACKs** the message if successful; pushes to DLQ and ACKs if retries are exhausted
+1. **Parses** the raw stream entry into `domain.Event`.
+2. **Validates** the event (id present, type recognised, payload non-empty).
+3. **Idempotency check** — queries `jobs` table by `event_id`; skips if already `success`.
+4. **Creates** a `pending` job row in PostgreSQL.
+5. **Encodes** the transaction data by mapping domain payloads to SDK-specific `Params`.
+6. **Dispatches** via the **AA EntryPoint** (`HandleOps`) with retry + exponential backoff.
+7. **Updates** the job row to `success` (with tx hashes) or `failed` (with error).
+8. **ACKs** the message if successful; pushes to DLQ and ACKs if retries are exhausted.
 
 ---
 
@@ -167,21 +157,15 @@ make cover      # coverage HTML report → coverage.html
 
 ## Architecture Decisions
 
-**SDK isolation**: `internal/sdk/blockchain_adapter.go` is the *only* file that
-imports `hara-core-blockchain-lib` and `did-root-sdk`. Everything else depends
-on the `service.BlockchainService` interface, making the SDK trivially swappable
-and all business logic independently testable with `mocks.MockBlockchainService`.
+**SDK Isolation**: The `internal/sdk/` directory is the **only** entry point for third-party SDK dependencies (DID, VC, Alias, AA). The rest of the application interacts with the blockchain via a high-level `BlockchainService` interface, ensuring that business logic remains independent of specific SDK implementations.
 
-**Idempotency via `event_id` UNIQUE constraint**: even under concurrent processing
-across replicas, the database constraint prevents double-processing at the storage
-level. The application-level check is an optimisation to avoid unnecessary
-blockchain calls.
+**Composite SDK Pattern**: A `CompositeAdapter` acts as a router, delegating jobs to specific SDK adapters based on the event type. This allows the system to scale its capabilities (e.g., adding a new credential type) by simply adding a new adapter without modifying the core worker loop.
 
-**ACK-after-success only**: messages stay in the Redis PEL (Pending Entries List)
-until processing is confirmed successful. After exhausting retries the event is
-written to the DLQ stream and then ACKed — keeping the main stream clean while
-preserving the failed payload for manual inspection or replay.
+**Account Abstraction (AA) Integration**: All write operations follow an **Encode-then-Dispatch** pattern. Specific adapters (DID, VC, Alias) encode their parameters into binary calldata, which is then passed to the `AAAdapter`. The `AAAdapter` dispatches these through the EntryPoint's `HandleOps`, centralizing gas management and wallet abstraction.
 
-**Graceful shutdown**: `signal.NotifyContext` propagates cancellation through the
-entire call tree. The pool's goroutine `WaitGroup` ensures no in-flight job is
-abandoned mid-transaction.
+**HNS-Only Configuration**: We've eliminated manual contract addresses and ABIs in favor of a **Handshake (HNS)** resolution model. This ensures that the worker always resolves the correct contract instances at runtime, reducing configuration errors and simplifying deployments across different environments (dev/test/prod).
+
+**Event Idempotency**: To prevent double-processing of events, we combine an application-level check with a database-level `unique_event_id` constraint. Each job is tracked in PostgreSQL, and once successful, it cannot be re-executed.
+
+**ACK-after-Success/DLQ Policy**: Messages are only acknowledged in Redis after a successful blockchain transaction or after being successfully pushed to the Dead Letter Queue (DLQ). This guarantees no events are lost due to transient failures or logic errors.
+

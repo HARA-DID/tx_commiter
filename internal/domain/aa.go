@@ -21,13 +21,19 @@ const (
 // AA Payloads
 
 type HandleOpsPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to SDK's HandleOpsParams
+	Target            string `json:"target"`
+	Value             string `json:"value"` // hex string for big.Int
+	Data              []byte `json:"data"`
+	UserNonce         string `json:"user_nonce,omitempty"` // optional, fetch from EP if empty
+	Signature         []byte `json:"signature"`
+	ClientBlockNumber string `json:"client_block_number,omitempty"`
+	MultipleRPCCalls  bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
 type BatchHandleOpsPayload struct {
-	MultipleRPCCalls bool `json:"multiple_rpc_calls,omitempty"`
-	// Params would be mapped to SDK's BatchHandleOpsParams
+	Wallet           string             `json:"wallet"`
+	UserOps          []HandleOpsPayload `json:"user_ops"`
+	MultipleRPCCalls bool               `json:"multiple_rpc_calls,omitempty"`
 }
 
 type InitializeWalletPayload struct {

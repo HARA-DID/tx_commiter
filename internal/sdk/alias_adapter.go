@@ -26,31 +26,13 @@ func NewAliasAdapter(p *Provider, cfg config.BlockchainConfig) (*AliasAdapter, e
 	// ── Factory ────────────────────────────────────────────────────
 	factory, err := aliasfact.NewAliasFactoryWithHNS(initCtx, cfg.AliasFactoryHNS, p.Chain)
 	if err != nil {
-		if cfg.AliasFactoryAddress != "" {
-			factory = aliasfact.NewAliasFactory(
-				harautils.HexToAddress(cfg.AliasFactoryAddress),
-				harautils.ABI{},
-				p.Chain,
-				nil,
-			)
-		} else {
-			return nil, fmt.Errorf("resolve AliasFactory via HNS %q: %w", cfg.AliasFactoryHNS, err)
-		}
+		return nil, fmt.Errorf("resolve AliasFactory via HNS %q: %w", cfg.AliasFactoryHNS, err)
 	}
 
 	// ── Storage ────────────────────────────────────────────────────
 	storage, err := aliasstor.NewAliasStorageWithHNS(initCtx, cfg.AliasStorageHNS, p.Chain)
 	if err != nil {
-		if cfg.AliasStorageAddress != "" {
-			storage = aliasstor.NewAliasStorage(
-				harautils.HexToAddress(cfg.AliasStorageAddress),
-				harautils.ABI{},
-				p.Chain,
-				nil,
-			)
-		} else {
-			return nil, fmt.Errorf("resolve AliasStorage via HNS %q: %w", cfg.AliasStorageHNS, err)
-		}
+		return nil, fmt.Errorf("resolve AliasStorage via HNS %q: %w", cfg.AliasStorageHNS, err)
 	}
 
 	return &AliasAdapter{
@@ -60,100 +42,140 @@ func NewAliasAdapter(p *Provider, cfg config.BlockchainConfig) (*AliasAdapter, e
 	}, nil
 }
 
-// ── BlockchainService implementation for Alias ───────────────────
+// ── Encode Methods ───────────────────────────────────────────────
 
-func (a *AliasAdapter) RegisterTLD(ctx context.Context, p domain.RegisterTLDPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.RegisterTLD(ctx, a.provider.Wallet, aliasfact.RegisterTLDParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.RegisterTLD: %w", err)
+func (a *AliasAdapter) EncodeRegisterTLD(p domain.RegisterTLDPayload) ([]byte, error) {
+	params := aliasfact.RegisterTLDParams{
+		TLD:   p.TLD,
+		Owner: p.Owner,
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("registerTLD", params)
 }
 
-func (a *AliasAdapter) RegisterDomain(ctx context.Context, p domain.RegisterDomainPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.RegisterDomain(ctx, a.provider.Wallet, aliasfact.RegisterDomainParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.RegisterDomain: %w", err)
+func (a *AliasAdapter) EncodeRegisterDomain(p domain.RegisterDomainPayload) ([]byte, error) {
+	params := aliasfact.RegisterDomainParams{
+		Label:  p.Label,
+		TLD:    p.TLD,
+		Period: aliasfact.RegistrationPeriod(p.Period),
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("registerDomain", params)
 }
 
-func (a *AliasAdapter) SetDIDAlias(ctx context.Context, p domain.SetDIDAliasPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.SetDID(ctx, a.provider.Wallet, aliasfact.SetDIDParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.SetDID: %w", err)
+func (a *AliasAdapter) EncodeSetDIDAlias(p domain.SetDIDAliasPayload) ([]byte, error) {
+	params := aliasfact.SetDIDParams{
+		Name: p.Name,
+		DID:  decodeHash(p.DID),
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("setDID", params)
 }
 
-func (a *AliasAdapter) SetDIDOrgAlias(ctx context.Context, p domain.SetDIDOrgAliasPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.SetDIDOrg(ctx, a.provider.Wallet, aliasfact.SetDIDOrgParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.SetDIDOrg: %w", err)
+func (a *AliasAdapter) EncodeSetDIDOrgAlias(p domain.SetDIDOrgAliasPayload) ([]byte, error) {
+	params := aliasfact.SetDIDOrgParams{
+		Name:        p.Name,
+		OrgDIDHash:  decodeHash(p.OrgDIDHash),
+		UserDIDHash: decodeHash(p.UserDIDHash),
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("setDIDOrg", params)
 }
 
-func (a *AliasAdapter) ExtendRegistration(ctx context.Context, p domain.ExtendRegistrationPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.ExtendRegistration(ctx, a.provider.Wallet, aliasfact.ExtendRegistrationParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.ExtendRegistration: %w", err)
+func (a *AliasAdapter) EncodeExtendRegistration(p domain.ExtendRegistrationPayload) ([]byte, error) {
+	params := aliasfact.ExtendRegistrationParams{
+		Node:   decodeHash(p.Node),
+		Period: aliasfact.RegistrationPeriod(p.Period),
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("extendRegistration", params)
 }
 
-func (a *AliasAdapter) RevokeAlias(ctx context.Context, p domain.RevokeAliasPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.RevokeAlias(ctx, a.provider.Wallet, aliasfact.NodeOnlyParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.RevokeAlias: %w", err)
+func (a *AliasAdapter) EncodeRevokeAlias(p domain.RevokeAliasPayload) ([]byte, error) {
+	params := aliasfact.NodeOnlyParams{
+		Node: decodeHash(p.Node),
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("revokeAlias", params)
 }
 
-func (a *AliasAdapter) UnrevokeAlias(ctx context.Context, p domain.UnrevokeAliasPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.UnrevokeAlias(ctx, a.provider.Wallet, aliasfact.NodeOnlyParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.UnrevokeAlias: %w", err)
+func (a *AliasAdapter) EncodeUnrevokeAlias(p domain.UnrevokeAliasPayload) ([]byte, error) {
+	params := aliasfact.NodeOnlyParams{
+		Node: decodeHash(p.Node),
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("unrevokeAlias", params)
 }
 
-func (a *AliasAdapter) RegisterSubdomain(ctx context.Context, p domain.RegisterSubdomainPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.RegisterSubdomain(ctx, a.provider.Wallet, aliasfact.RegisterSubdomainParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.RegisterSubdomain: %w", err)
+func (a *AliasAdapter) EncodeRegisterSubdomain(p domain.RegisterSubdomainPayload) ([]byte, error) {
+	params := aliasfact.RegisterSubdomainParams{
+		Label:        p.Label,
+		ParentDomain: p.ParentDomain,
+		Period:       aliasfact.RegistrationPeriod(p.Period),
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("registerSubdomain", params)
 }
 
-func (a *AliasAdapter) TransferAliasOwnership(ctx context.Context, p domain.TransferAliasOwnershipPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.TransferAliasOwnership(ctx, a.provider.Wallet, aliasfact.TransferAliasOwnershipParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.TransferAliasOwnership: %w", err)
+func (a *AliasAdapter) EncodeTransferAliasOwnership(p domain.TransferAliasOwnershipPayload) ([]byte, error) {
+	params := aliasfact.TransferAliasOwnershipParams{
+		Node:     decodeHash(p.Node),
+		NewOwner: p.NewOwner,
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("transferAliasOwnership", params)
 }
 
-func (a *AliasAdapter) TransferTLD(ctx context.Context, p domain.TransferTLDPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.TransferTLD(ctx, a.provider.Wallet, aliasfact.TransferTLDParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.TransferTLD: %w", err)
+func (a *AliasAdapter) EncodeTransferTLD(p domain.TransferTLDPayload) ([]byte, error) {
+	params := aliasfact.TransferTLDParams{
+		TLD:      p.TLD,
+		NewOwner: p.NewOwner,
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("transferTLD", params)
 }
 
-func (a *AliasAdapter) SetAliasRootStorage(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.SetDIDRootStorage(ctx, a.provider.Wallet, aliasfact.SetDIDRootStorageParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.SetDIDRootStorage: %w", err)
+func (a *AliasAdapter) EncodeSetAliasRootStorage(p domain.SetAliasAddressPayload) ([]byte, error) {
+	params := aliasfact.SetDIDRootStorageParams{
+		DIDRootStorage: p.Address,
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("setDIDRootStorage", params)
 }
 
-func (a *AliasAdapter) SetAliasOrgStorage(ctx context.Context, p domain.SetAddressPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.factory.SetDIDOrgStorage(ctx, a.provider.Wallet, aliasfact.SetDIDOrgStorageParams{}, p.MultipleRPCCalls)
-	if err != nil {
-		return nil, fmt.Errorf("aliasFactory.SetDIDOrgStorage: %w", err)
+func (a *AliasAdapter) EncodeSetAliasOrgStorage(p domain.SetAliasAddressPayload) ([]byte, error) {
+	params := aliasfact.SetDIDOrgStorageParams{
+		DIDOrgStorage: p.Address,
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	return a.encode("setDIDOrgStorage", params)
+}
+
+func (a *AliasAdapter) EncodeSetFactoryContract(p domain.SetFactoryContractPayload) ([]byte, error) {
+	params := aliasstor.SetFactoryContractParams{
+		FactoryContract: harautils.HexToAddress(p.FactoryContract),
+	}
+	return a.encodeStorage("setFactoryContract", params)
+}
+
+// ── Private Helpers ──────────────────────────────────────────────
+
+func (a *AliasAdapter) encode(methodName string, params interface{ ToArgs() []any }) ([]byte, error) {
+	method, ok := a.factory.ContractABI.Methods[methodName]
+	if !ok {
+		return nil, fmt.Errorf("method %s not found in ABI", methodName)
+	}
+
+	inputs, err := method.Inputs.Pack(params.ToArgs()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack %s arguments: %w", methodName, err)
+	}
+
+	return append(method.ID, inputs...), nil
+}
+
+func (a *AliasAdapter) encodeStorage(methodName string, params interface{ ToArgs() []any }) ([]byte, error) {
+	method, ok := a.storage.ContractABI.Methods[methodName]
+	if !ok {
+		return nil, fmt.Errorf("method %s not found in storage ABI", methodName)
+	}
+
+	inputs, err := method.Inputs.Pack(params.ToArgs()...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack %s arguments: %w", methodName, err)
+	}
+
+	return append(method.ID, inputs...), nil
+}
+
+func decodeHash(hexStr string) [32]byte {
+	return harautils.HexToHash(hexStr)
 }

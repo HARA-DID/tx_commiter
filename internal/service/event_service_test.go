@@ -145,7 +145,7 @@ func TestEventService_Process_AllEventTypes(t *testing.T) {
 		},
 		{
 			"STORE_DATA", domain.EventTypeStoreData,
-			domain.StoreDataPayload{DIDIndex: big.NewInt(1), PropertyKey: "profile", Data: []byte(`{}`)},
+			domain.StoreDataPayload{DIDIndex: big.NewInt(1), PropertyKey: "profile", Data: "{}"},
 			"StoreData",
 		},
 	}

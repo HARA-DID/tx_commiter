@@ -268,18 +268,25 @@ func (s *EventService) dispatch(ctx context.Context, event *domain.Event) (*doma
 		return s.blockchain.TransferTLD(ctx, p)
 
 	case domain.EventTypeSetAliasRootStorage:
-		var p domain.SetAddressPayload
+		var p domain.SetAliasAddressPayload
 		if err := json.Unmarshal(event.Payload, &p); err != nil {
-			return nil, fmt.Errorf("unmarshal SetAddressPayload: %w", err)
+			return nil, fmt.Errorf("unmarshal SetAliasAddressPayload: %w", err)
 		}
 		return s.blockchain.SetAliasRootStorage(ctx, p)
 
 	case domain.EventTypeSetAliasOrgStorage:
-		var p domain.SetAddressPayload
+		var p domain.SetAliasAddressPayload
 		if err := json.Unmarshal(event.Payload, &p); err != nil {
-			return nil, fmt.Errorf("unmarshal SetAddressPayload: %w", err)
+			return nil, fmt.Errorf("unmarshal SetAliasAddressPayload: %w", err)
 		}
 		return s.blockchain.SetAliasOrgStorage(ctx, p)
+
+	case domain.EventTypeSetFactoryContract:
+		var p domain.SetFactoryContractPayload
+		if err := json.Unmarshal(event.Payload, &p); err != nil {
+			return nil, fmt.Errorf("unmarshal SetFactoryContractPayload: %w", err)
+		}
+		return s.blockchain.SetFactoryContract(ctx, p)
 
 	default:
 		return nil, fmt.Errorf("unknown event type: %q", event.Type)

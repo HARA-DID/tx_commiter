@@ -25,19 +25,9 @@ func NewDIDAdapter(p *Provider, cfg config.BlockchainConfig) (*DIDAdapter, error
 	var err error
 
 	// ── Contract Resolution ──────────────────────────────────────────
-	if cfg.HNSName != "" {
-		contract, err = p.Chain.ContractWithHNS(initCtx, cfg.HNSName)
-		if err != nil {
-			return nil, fmt.Errorf("resolve contract via HNS %q: %w", cfg.HNSName, err)
-		}
-	} else if cfg.ContractAddress != "" && cfg.ContractABI != "" {
-		parsedABI, parseErr := harautils.ParseABI(cfg.ContractABI)
-		if parseErr != nil {
-			return nil, fmt.Errorf("parse contract ABI: %w", parseErr)
-		}
-		contract = p.Chain.Contract(parsedABI, harautils.HexToAddress(cfg.ContractAddress))
-	} else {
-		return nil, fmt.Errorf("DID config requires either HNS_NAME or both CONTRACT_ADDRESS and CONTRACT_ABI")
+	contract, err = p.Chain.ContractWithHNS(initCtx, cfg.DIDRootFactoryHNS)
+	if err != nil {
+		return nil, fmt.Errorf("resolve contract via HNS %q: %w", cfg.DIDRootFactoryHNS, err)
 	}
 
 	// ── Factory ─────────────────────────────────────────────────────
@@ -54,94 +44,87 @@ func NewDIDAdapter(p *Provider, cfg config.BlockchainConfig) (*DIDAdapter, error
 	}, nil
 }
 
-// CreateDID registers a new DID on-chain.
-func (a *DIDAdapter) CreateDID(ctx context.Context, p domain.CreateDIDPayload) (*domain.BlockchainResult, error) {
+// ── Encode Methods ───────────────────────────────────────────────
+
+func (a *DIDAdapter) EncodeCreateDID(p domain.CreateDIDPayload) ([]byte, error) {
 	keyID, err := resolveKeyIdentifier(p.KeyIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
-	txHashes, err := a.factory.CreateDID(
-		ctx,
-		a.provider.Wallet,
-		didfactory.CreateDIDParam{DID: p.DID},
-		keyID,
-		p.MultipleRPCCalls,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("factory.CreateDID: %w", err)
-	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	argBuilder := a.provider.Network.ArgBuilder().
+		Type("string").Value(p.DID)
+	data := harautils.EncodeArgs(argBuilder)
+
+	return a.encodeDID(didfactory.TypeCreateDID, data, keyID)
 }
 
-// AddKey adds a verification key to an existing DID document.
-func (a *DIDAdapter) AddKey(ctx context.Context, p domain.AddKeyPayload) (*domain.BlockchainResult, error) {
+func (a *DIDAdapter) EncodeAddKey(p domain.AddKeyPayload) ([]byte, error) {
 	keyID, err := resolveKeyIdentifier(p.KeyIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
-	txHashes, err := a.factory.AddKey(
-		ctx,
-		a.provider.Wallet,
-		didfactory.StoreKeyParams{
-			DIDIndex: p.DIDIndex,
-			KeyType:  p.KeyType,
-			Purpose:  p.Purpose,
-		},
-		keyID,
-		p.MultipleRPCCalls,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("factory.AddKey: %w", err)
-	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	// The SDK hashes the public key to [32]byte
+	keyHashed := harautils.HexToHash(p.PublicKey)
+
+	argBuilder := a.provider.Network.ArgBuilder().
+		Type("uint256").Value(p.DIDIndex).
+		Type("bytes32").Value(keyHashed).
+		Type("string").Value(""). // KeyIdentifierDst usually empty in these calls
+		Type("uint8").Value(p.Purpose).
+		Type("uint8").Value(p.KeyType)
+	data := harautils.EncodeArgs(argBuilder)
+
+	return a.encodeDID(didfactory.TypeAddKey, data, keyID)
 }
 
-// AddClaim attaches a verifiable claim to a DID document.
-func (a *DIDAdapter) AddClaim(ctx context.Context, p domain.AddClaimPayload) (*domain.BlockchainResult, error) {
+func (a *DIDAdapter) EncodeAddClaim(p domain.AddClaimPayload) ([]byte, error) {
 	keyID, err := resolveKeyIdentifier(p.KeyIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
-	txHashes, err := a.factory.AddClaim(
-		ctx,
-		a.provider.Wallet,
-		didfactory.StoreClaimParams{
-			DIDIndex: p.DIDIndex,
-			Topic:    p.Topic,
-			Data:     p.Data,
-		},
-		keyID,
-		p.MultipleRPCCalls,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("factory.AddClaim: %w", err)
-	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+	argBuilder := a.provider.Network.ArgBuilder().
+		Type("uint256").Value(p.DIDIndex).
+		Type("uint8").Value(p.Topic).
+		Type("bytes").Value(p.Data).
+		Type("string").Value(p.URI).
+		Type("bytes").Value(p.Signature)
+	data := harautils.EncodeArgs(argBuilder)
+
+	return a.encodeDID(didfactory.TypeAddClaim, data, keyID)
 }
 
-// StoreData stores arbitrary binary data linked to a DID property key.
-func (a *DIDAdapter) StoreData(ctx context.Context, p domain.StoreDataPayload) (*domain.BlockchainResult, error) {
+func (a *DIDAdapter) EncodeStoreData(p domain.StoreDataPayload) ([]byte, error) {
 	keyID, err := resolveKeyIdentifier(p.KeyIdentifier)
 	if err != nil {
 		return nil, err
 	}
 
-	txHashes, err := a.factory.StoreData(
-		ctx,
-		a.provider.Wallet,
-		didfactory.StoreDataParams{
-			DIDIndex: p.DIDIndex,
-		},
-		keyID,
-		p.MultipleRPCCalls,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("factory.StoreData: %w", err)
+	argBuilder := a.provider.Network.ArgBuilder().
+		Type("uint256").Value(p.DIDIndex).
+		Type("string").Value(p.PropertyKey).
+		Type("string").Value(p.Data)
+	data := harautils.EncodeArgs(argBuilder)
+
+	return a.encodeDID(didfactory.TypeStoreData, data, keyID)
+}
+
+// ── Private Helpers ──────────────────────────────────────────────
+
+func (a *DIDAdapter) encodeDID(txType uint8, data []byte, keyIdentifier string) ([]byte, error) {
+	method, ok := a.factory.ContractABI.Methods["callExternalDID"]
+	if !ok {
+		return nil, fmt.Errorf("method callExternalDID not found in ABI")
 	}
-	return &domain.BlockchainResult{TxHashes: txHashes}, nil
+
+	inputs, err := method.Inputs.Pack(txType, data, keyIdentifier)
+	if err != nil {
+		return nil, fmt.Errorf("failed to pack callExternalDID arguments: %w", err)
+	}
+
+	return append(method.ID, inputs...), nil
 }
 
 // ---------------------------------------------------------------------------

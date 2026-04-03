@@ -3,6 +3,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"math/big"
 
 	aapkg "github.com/HARA-DID/account-abstraction-sdk/pkg/entrypoint"
 	"github.com/HARA-DID/account-abstraction-sdk/pkg/gasmanager"
@@ -15,9 +16,9 @@ import (
 
 // AAAdapter implements Account Abstraction related blockchain operations.
 type AAAdapter struct {
-	provider     *Provider
-	entryPoint   *aapkg.EntryPoint
-	gasManager   *gasmanager.GasManager
+	provider      *Provider
+	entryPoint    *aapkg.EntryPoint
+	gasManager    *gasmanager.GasManager
 	walletFactory *walletfactory.WalletFactory
 }
 
@@ -28,33 +29,20 @@ func NewAAAdapter(p *Provider, cfg config.BlockchainConfig) (*AAAdapter, error) 
 	// ── EntryPoint ──────────────────────────────────────────────────
 	entryPoint, err := aapkg.NewEntryPointWithHNS(initCtx, cfg.EntryPointHNS, p.Chain)
 	if err != nil {
-		if cfg.EntryPointAddress != "" {
-			entryPoint = aapkg.NewEntryPoint(
-				harautils.HexToAddress(cfg.EntryPointAddress),
-				harautils.ABI{}, 
-				p.Chain,
-				nil, 
-			)
-		} else {
-			return nil, fmt.Errorf("resolve EntryPoint via HNS %q: %w", cfg.EntryPointHNS, err)
-		}
+		return nil, fmt.Errorf("resolve EntryPoint via HNS %q: %w", cfg.EntryPointHNS, err)
 	}
 
 	// ── GasManager ─────────────────────────────────────────────────
-	gasMgr := gasmanager.NewGasManager(
-		harautils.HexToAddress(cfg.GasManagerAddress),
-		harautils.ABI{},
-		p.Chain,
-		nil,
-	)
+	gasMgr, err := gasmanager.NewGasManagerWithHNS(initCtx, cfg.GasManagerHNS, p.Chain)
+	if err != nil {
+		return nil, fmt.Errorf("resolve GasManager via HNS %q: %w", cfg.GasManagerHNS, err)
+	}
 
 	// ── WalletFactory ──────────────────────────────────────────────
-	walletFact := walletfactory.NewWalletFactory(
-		harautils.HexToAddress(cfg.FactoryAddress),
-		harautils.ABI{},
-		p.Chain,
-		nil,
-	)
+	walletFact, err := walletfactory.NewWalletFactoryWithHNS(initCtx, cfg.WalletFactoryHNS, p.Chain)
+	if err != nil {
+		return nil, fmt.Errorf("resolve WalletFactory via HNS %q: %w", cfg.WalletFactoryHNS, err)
+	}
 
 	return &AAAdapter{
 		provider:      p,
@@ -67,7 +55,59 @@ func NewAAAdapter(p *Provider, cfg config.BlockchainConfig) (*AAAdapter, error) 
 // ── BlockchainService implementation for AA ──────────────────────
 
 func (a *AAAdapter) HandleOps(ctx context.Context, p domain.HandleOpsPayload) (*domain.BlockchainResult, error) {
-	txHashes, err := a.entryPoint.HandleOps(ctx, a.provider.Wallet, aapkg.HandleOpsParams{}, p.MultipleRPCCalls)
+	sender, err := a.provider.Wallet.GetAddress()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get wallet address: %w", err)
+	}
+
+	// 1. Fetch Nonce automatically if not provided
+	var nonce *big.Int
+	if p.UserNonce != "" {
+		n, ok := new(big.Int).SetString(p.UserNonce, 0)
+		if !ok {
+			return nil, fmt.Errorf("invalid user_nonce format: %s", p.UserNonce)
+		}
+		nonce = n
+	} else {
+		// Use default key 0 for GetNonce
+		n, err := a.entryPoint.GetNonce(ctx, sender, big.NewInt(0))
+		if err != nil {
+			return nil, fmt.Errorf("failed to get nonce from EntryPoint: %w", err)
+		}
+		nonce = n
+	}
+
+	// 2. Construct UserOp
+	val := big.NewInt(0)
+	if p.Value != "" {
+		if v, ok := new(big.Int).SetString(p.Value, 0); ok {
+			val = v
+		}
+	}
+
+	var blockNum *big.Int
+	if p.ClientBlockNumber != "" {
+		if bn, ok := new(big.Int).SetString(p.ClientBlockNumber, 0); ok {
+			blockNum = bn
+		}
+	}
+
+	userOp := aapkg.UserOp{
+		Target:            harautils.HexToAddress(p.Target),
+		Value:             val,
+		Data:              p.Data,
+		ClientBlockNumber: blockNum,
+		UserNonce:         nonce,
+		Signature:         p.Signature,
+	}
+
+	params := aapkg.HandleOpsParams{
+		Wallet: sender,
+		UserOp: userOp,
+	}
+
+	// 3. Dispatch
+	txHashes, err := a.entryPoint.HandleOps(ctx, a.provider.Wallet, params, p.MultipleRPCCalls)
 	if err != nil {
 		return nil, fmt.Errorf("entryPoint.HandleOps: %w", err)
 	}

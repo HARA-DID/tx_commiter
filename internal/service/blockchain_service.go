@@ -40,6 +40,7 @@ type BlockchainService interface {
 	RegisterSubdomain(ctx context.Context, payload domain.RegisterSubdomainPayload) (*domain.BlockchainResult, error)
 	TransferAliasOwnership(ctx context.Context, payload domain.TransferAliasOwnershipPayload) (*domain.BlockchainResult, error)
 	TransferTLD(ctx context.Context, payload domain.TransferTLDPayload) (*domain.BlockchainResult, error)
-	SetAliasRootStorage(ctx context.Context, payload domain.SetAddressPayload) (*domain.BlockchainResult, error)
-	SetAliasOrgStorage(ctx context.Context, payload domain.SetAddressPayload) (*domain.BlockchainResult, error)
+	SetAliasRootStorage(ctx context.Context, payload domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
+	SetAliasOrgStorage(ctx context.Context, payload domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
+	SetFactoryContract(ctx context.Context, payload domain.SetFactoryContractPayload) (*domain.BlockchainResult, error)
 }

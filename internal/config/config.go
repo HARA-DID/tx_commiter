@@ -31,22 +31,20 @@ type DBConfig struct {
 }
 
 type BlockchainConfig struct {
-	RPCURLs         []string
-	PrivateKey      string
-	HNSName         string
-	ContractAddress string
-	ContractABI     string
-	EntryPointAddress string
-	EntryPointHNS     string
-	FactoryAddress    string
-	GasManagerAddress string
-	VCFactoryAddress  string
-	VCFactoryHNS      string
-	VCStorageAddress  string
-	VCStorageHNS      string
-	AliasFactoryAddress string
+	RPCURLs             []string
+	PrivateKey          string
+	EntryPointHNS       string
+	GasManagerHNS       string
+	WalletHNS           string
+	WalletFactoryHNS    string
+	DIDRootFactoryHNS   string
+	DIDRootStorageHNS   string
+	DIDOrgStorageHNS    string
+	VCFactoryHNS        string
+	VCStorageHNS        string
+	VCCertificateNFTHNS string
+	VCIdentityNFTHNS    string
 	AliasFactoryHNS     string
-	AliasStorageAddress string
 	AliasStorageHNS     string
 }
 
@@ -79,22 +77,21 @@ func Load() (*Config, error) {
 			ConnMaxLifetime: getEnvDuration("DB_CONN_MAX_LIFETIME", 5*time.Minute),
 		},
 		Blockchain: BlockchainConfig{
-			RPCURLs:         splitEnv("RPC_URLS", ","),
-			PrivateKey:      requireEnv("PRIVATE_KEY"),
-			HNSName:         getEnvOrDefault("HNS_NAME", ""),
-			ContractABI:     getEnvOrDefault("CONTRACT_ABI", ""),
-			EntryPointAddress: getEnvOrDefault("ENTRYPOINT_ADDRESS", ""),
-			EntryPointHNS:     getEnvOrDefault("ENTRYPOINT_HNS", ""),
-			FactoryAddress:    getEnvOrDefault("FACTORY_ADDRESS", ""),
-			GasManagerAddress: getEnvOrDefault("GASMANAGER_ADDRESS", ""),
-			VCFactoryAddress:  getEnvOrDefault("VC_FACTORY_ADDRESS", ""),
-			VCFactoryHNS:      getEnvOrDefault("VC_FACTORY_HNS", ""),
-			VCStorageAddress:  getEnvOrDefault("VC_STORAGE_ADDRESS", ""),
-			VCStorageHNS:      getEnvOrDefault("VC_STORAGE_HNS", ""),
-			AliasFactoryAddress: getEnvOrDefault("ALIAS_FACTORY_ADDRESS", ""),
-			AliasFactoryHNS:     getEnvOrDefault("ALIAS_FACTORY_HNS", ""),
-			AliasStorageAddress: getEnvOrDefault("ALIAS_STORAGE_ADDRESS", ""),
-			AliasStorageHNS:     getEnvOrDefault("ALIAS_STORAGE_HNS", ""),
+			RPCURLs:             splitEnv("RPC_URLS", ","),
+			PrivateKey:          getEnvOrDefault("PRIVATE_KEY", "0x"),
+			EntryPointHNS:       getEnvOrDefault("AA_ENTRYPOINT_HNS", ""),
+			GasManagerHNS:       getEnvOrDefault("AA_GAS_MANAGER_HNS", ""),
+			WalletHNS:           getEnvOrDefault("AA_WALLET_HNS", ""),
+			WalletFactoryHNS:    getEnvOrDefault("AA_WALLET_FACTORY_HNS", ""),
+			DIDRootFactoryHNS:   getEnvOrDefault("DID_ROOT_FACTORY_HNS", ""),
+			DIDRootStorageHNS:   getEnvOrDefault("DID_ROOT_STORAGE_HNS", ""),
+			DIDOrgStorageHNS:    getEnvOrDefault("DID_ORG_STORAGE_HNS", ""),
+			VCFactoryHNS:        getEnvOrDefault("DID_VC_FACTORY_HNS", ""),
+			VCStorageHNS:        getEnvOrDefault("DID_VC_STORAGE_HNS", ""),
+			VCCertificateNFTHNS: getEnvOrDefault("DID_VC_CERTIFICATE_NFT_HNS", ""),
+			VCIdentityNFTHNS:    getEnvOrDefault("DID_VC_IDENTITY_NFT_HNS", ""),
+			AliasFactoryHNS:     getEnvOrDefault("DID_ALIAS_FACTORY_HNS", ""),
+			AliasStorageHNS:     getEnvOrDefault("DID_ALIAS_STORAGE_HNS", ""),
 		},
 		Worker: WorkerConfig{
 			ConsumerName:    getEnvOrDefault("CONSUMER_NAME", defaultConsumerName()),
