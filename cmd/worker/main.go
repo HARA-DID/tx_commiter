@@ -10,6 +10,7 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/sirupsen/logrus"
 
+	"github.com/HARA-DID/did-queueing-engine/internal/callback"
 	"github.com/HARA-DID/did-queueing-engine/internal/config"
 	infradb "github.com/HARA-DID/did-queueing-engine/internal/infra/db"
 	redisinfra "github.com/HARA-DID/did-queueing-engine/internal/infra/redis"
@@ -90,8 +91,11 @@ func main() {
 	// ── Repositories ───────────────────────────────────────────────────────
 	jobRepo := infradb.NewPostgresJobRepository(db)
 
+	// ── Callbacks ──────────────────────────────────────────────────────────
+	callbackRegistry := callback.NewDefaultRegistry()
+
 	// ── Services ───────────────────────────────────────────────────────────
-	eventSvc := service.NewEventService(jobRepo, blockchainSvc, log)
+	eventSvc := service.NewEventService(jobRepo, blockchainSvc, callbackRegistry, log)
 
 	// ── Metrics ────────────────────────────────────────────────────────────
 	metrics := pkg.NewMetrics(prometheus.DefaultRegisterer)

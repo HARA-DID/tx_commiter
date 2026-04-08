@@ -6,18 +6,13 @@ import (
 	"time"
 )
 
-// Validator is implemented by any domain payload that requires custom validation.
 type Validator interface {
 	Validate() error
 }
 
-// EventType represents a distinct blockchain operation.
 type EventType string
 
-// IsValid checks that the event type is recognized by one of our modules.
 func (e EventType) IsValid() bool {
-	// We check for presence in any of our specialized event categories.
-	// This will be expanded as we add more modules.
 	switch e {
 	case EventTypeCreateDID, EventTypeAddKey, EventTypeAddClaim, EventTypeStoreData,
 		EventTypeHandleOps, EventTypeBatchHandleOps, EventTypeInitializeWallet,

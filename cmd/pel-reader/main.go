@@ -45,7 +45,6 @@ func main() {
 	fmt.Printf("Analyzing PEL (Pending Entries List) for Group: %q on Stream: %q\n", groupName, streamName)
 	fmt.Printf("Displaying unacknowledged messages...\n\n")
 
-	// 1. Get detailed pending messages
 	pendings, err := client.XPendingExt(ctx, &redis.XPendingExtArgs{
 		Stream: streamName,
 		Group:  groupName,
@@ -64,7 +63,6 @@ func main() {
 	}
 
 	for _, p := range pendings {
-		// 2. Fetch the actual payload for each pending ID
 		msgs, err := client.XRange(ctx, streamName, p.ID, p.ID).Result()
 		var payload string
 		if err == nil && len(msgs) > 0 {

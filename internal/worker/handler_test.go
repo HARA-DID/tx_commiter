@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/HARA-DID/did-queueing-engine/internal/callback"
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 	"github.com/HARA-DID/did-queueing-engine/internal/mocks"
 	"github.com/HARA-DID/did-queueing-engine/internal/service"
@@ -25,7 +26,7 @@ func buildHandler(t *testing.T, bc *mocks.MockBlockchainService) (*worker.Handle
 	t.Helper()
 	repo := mocks.NewMockJobRepository()
 	log := newTestLogger()
-	svc := service.NewEventService(repo, bc, log)
+	svc := service.NewEventService(repo, bc, callback.NewRegistry(), log)
 	retryCfg := pkg.RetryConfig{MaxAttempts: 2, BaseDelay: time.Millisecond, MaxDelay: 10 * time.Millisecond}
 	reg := prometheus.NewRegistry()
 	metrics := pkg.NewMetrics(reg)

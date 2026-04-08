@@ -8,7 +8,6 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-// NewClient creates a Redis client from config.
 func NewClient(cfg config.RedisConfig) (*redis.Client, error) {
 	opts, err := redis.ParseURL(cfg.URL)
 	if err != nil {
@@ -35,7 +34,7 @@ func PushToDLQ(ctx context.Context, client *redis.Client, dlqStream, eventID, pa
 		Stream: dlqStream,
 		MaxLen: 10000, // Optimize cost/memory: keep only last 10k failed events
 		Approx: true,  // Efficiently trim the stream without blocking
-		Values: map[string]interface{}{
+		Values: map[string]any{
 			"event_id": eventID,
 			"payload":  payload,
 		},

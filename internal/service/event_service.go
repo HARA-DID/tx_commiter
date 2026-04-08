@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"time"
 
+	"github.com/HARA-DID/did-queueing-engine/internal/callback"
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 	"github.com/HARA-DID/did-queueing-engine/internal/repository"
 	"github.com/google/uuid"
@@ -16,21 +18,27 @@ type eventHandler func(context.Context, json.RawMessage) (*domain.BlockchainResu
 
 // EventService orchestrates event processing: idempotency → DB → blockchain → DB.
 type EventService struct {
-	jobRepo    repository.JobRepository
-	blockchain BlockchainService
-	log        *logrus.Logger
-	handlers   map[domain.EventType]eventHandler
+	jobRepo        repository.JobRepository
+	blockchain     BlockchainService
+	callbacks      *callback.Registry
+	log            *logrus.Logger
+	handlers       map[domain.EventType]eventHandler
+	eventCallbacks map[domain.EventType]callback.Func
 }
 
 func NewEventService(
 	jobRepo repository.JobRepository,
 	blockchain BlockchainService,
+	callbacks *callback.Registry,
 	log *logrus.Logger,
 ) *EventService {
 	s := &EventService{
-		jobRepo:    jobRepo,
-		blockchain: blockchain,
-		log:        log,
+		jobRepo:        jobRepo,
+		blockchain:     blockchain,
+		callbacks:      callbacks,
+		log:            log,
+		handlers:       make(map[domain.EventType]eventHandler),
+		eventCallbacks: make(map[domain.EventType]callback.Func),
 	}
 	s.initHandlers()
 	return s
@@ -77,6 +85,15 @@ func (s *EventService) Process(ctx context.Context, event *domain.Event) error {
 		errMsg := bcErr.Error()
 		_ = s.jobRepo.UpdateStatus(ctx, job.ID, domain.JobStatusFailed, nil, errMsg)
 		log.WithError(bcErr).Error("blockchain operation failed")
+
+		s.triggerCallback(ctx, event, callback.Result{
+			EventID:      event.ID,
+			JobID:        job.ID,
+			EventType:    string(event.Type),
+			Success:      false,
+			ErrorMessage: errMsg,
+		})
+
 		return &domain.ErrBlockchain{Op: string(event.Type), Err: bcErr}
 	}
 
@@ -85,68 +102,76 @@ func (s *EventService) Process(ctx context.Context, event *domain.Event) error {
 	}
 
 	log.WithField("tx_hashes", result.TxHashes).Info("event processed successfully")
+
+	s.triggerCallback(ctx, event, callback.Result{
+		EventID:   event.ID,
+		JobID:     job.ID,
+		EventType: string(event.Type),
+		Success:   true,
+		TxHashes:  result.TxHashes,
+	})
+
 	return nil
 }
 
 func (s *EventService) initHandlers() {
-	s.handlers = make(map[domain.EventType]eventHandler)
-
 	// --- DID ---
-	s.register(domain.EventTypeCreateDID, s.blockchain.CreateDID)
-	s.register(domain.EventTypeAddKey, s.blockchain.AddKey)
-	s.register(domain.EventTypeAddClaim, s.blockchain.AddClaim)
-	s.register(domain.EventTypeStoreData, s.blockchain.StoreData)
-	s.register(domain.EventTypeUpdateDID, s.blockchain.UpdateDID)
-	s.register(domain.EventTypeDeactivateDID, s.blockchain.DeactivateDID)
-	s.register(domain.EventTypeReactivateDID, s.blockchain.ReactivateDID)
-	s.register(domain.EventTypeTransferDID, s.blockchain.TransferDIDOwner)
-	s.register(domain.EventTypeDeleteData, s.blockchain.DeleteData)
-	s.register(domain.EventTypeRemoveKey, s.blockchain.RemoveKey)
-	s.register(domain.EventTypeRemoveClaim, s.blockchain.RemoveClaim)
+	s.register(domain.EventTypeCreateDID, s.blockchain.CreateDID, callback.NoOp)
+	s.register(domain.EventTypeAddKey, s.blockchain.AddKey, callback.NoOp)
+	s.register(domain.EventTypeAddClaim, s.blockchain.AddClaim, callback.NoOp)
+	s.register(domain.EventTypeStoreData, s.blockchain.StoreData, callback.NoOp)
+	s.register(domain.EventTypeUpdateDID, s.blockchain.UpdateDID, callback.NoOp)
+	s.register(domain.EventTypeDeactivateDID, s.blockchain.DeactivateDID, callback.NoOp)
+	s.register(domain.EventTypeReactivateDID, s.blockchain.ReactivateDID, callback.NoOp)
+	s.register(domain.EventTypeTransferDID, s.blockchain.TransferDIDOwner, callback.NoOp)
+	s.register(domain.EventTypeDeleteData, s.blockchain.DeleteData, callback.NoOp)
+	s.register(domain.EventTypeRemoveKey, s.blockchain.RemoveKey, callback.NoOp)
+	s.register(domain.EventTypeRemoveClaim, s.blockchain.RemoveClaim, callback.NoOp)
 
 	// --- Org ---
-	s.register(domain.EventTypeCreateOrg, s.blockchain.CreateOrg)
-	s.register(domain.EventTypeAddMember, s.blockchain.AddMember)
-	s.register(domain.EventTypeRemoveMember, s.blockchain.RemoveMember)
-	s.register(domain.EventTypeUpdateMember, s.blockchain.UpdateMember)
-	s.register(domain.EventTypeDeactivateOrg, s.blockchain.DeactivateOrg)
-	s.register(domain.EventTypeReactivateOrg, s.blockchain.ReactivateOrg)
-	s.register(domain.EventTypeTransferOrgOwner, s.blockchain.TransferOrgOwner)
+	s.register(domain.EventTypeCreateOrg, s.blockchain.CreateOrg, callback.NoOp)
+	s.register(domain.EventTypeAddMember, s.blockchain.AddMember, callback.NoOp)
+	s.register(domain.EventTypeRemoveMember, s.blockchain.RemoveMember, callback.NoOp)
+	s.register(domain.EventTypeUpdateMember, s.blockchain.UpdateMember, callback.NoOp)
+	s.register(domain.EventTypeDeactivateOrg, s.blockchain.DeactivateOrg, callback.NoOp)
+	s.register(domain.EventTypeReactivateOrg, s.blockchain.ReactivateOrg, callback.NoOp)
+	s.register(domain.EventTypeTransferOrgOwner, s.blockchain.TransferOrgOwner, callback.NoOp)
 
 	// --- AA ---
-	s.register(domain.EventTypeHandleOps, s.blockchain.HandleOps)
-	s.register(domain.EventTypeDeployWallet, s.blockchain.DeployWallet)
+	s.register(domain.EventTypeHandleOps, s.blockchain.HandleOps, callback.NoOp)
+	s.register(domain.EventTypeDeployWallet, s.blockchain.DeployWallet, callback.NoOp)
 
 	// --- VC ---
-	s.register(domain.EventTypeIssueCredential, s.blockchain.IssueCredential)
-	s.register(domain.EventTypeBurnCredential, s.blockchain.BurnCredential)
-	s.register(domain.EventTypeUpdateMetadata, s.blockchain.UpdateMetadata)
-	s.register(domain.EventTypeRevokeCredential, s.blockchain.RevokeCredential)
-	s.register(domain.EventTypeApproveCredentialOrg, s.blockchain.ApproveCredentialOrg)
-	s.register(domain.EventTypeApproveCredential, s.blockchain.ApproveCredential)
-	s.register(domain.EventTypeSetDidRootStorage, s.blockchain.SetDidRootStorage)
-	s.register(domain.EventTypeSetDidOrgStorage, s.blockchain.SetDidOrgStorage)
+	s.register(domain.EventTypeIssueCredential, s.blockchain.IssueCredential, callback.NoOp)
+	s.register(domain.EventTypeBurnCredential, s.blockchain.BurnCredential, callback.NoOp)
+	s.register(domain.EventTypeUpdateMetadata, s.blockchain.UpdateMetadata, callback.NoOp)
+	s.register(domain.EventTypeRevokeCredential, s.blockchain.RevokeCredential, callback.NoOp)
+	s.register(domain.EventTypeApproveCredentialOrg, s.blockchain.ApproveCredentialOrg, callback.NoOp)
+	s.register(domain.EventTypeApproveCredential, s.blockchain.ApproveCredential, callback.NoOp)
+	s.register(domain.EventTypeSetDidRootStorage, s.blockchain.SetDidRootStorage, callback.NoOp)
+	s.register(domain.EventTypeSetDidOrgStorage, s.blockchain.SetDidOrgStorage, callback.NoOp)
 
 	// --- Alias ---
-	s.register(domain.EventTypeRegisterTLD, s.blockchain.RegisterTLD)
-	s.register(domain.EventTypeRegisterDomain, s.blockchain.RegisterDomain)
-	s.register(domain.EventTypeSetDIDAlias, s.blockchain.SetDIDAlias)
-	s.register(domain.EventTypeSetDIDOrgAlias, s.blockchain.SetDIDOrgAlias)
-	s.register(domain.EventTypeExtendRegistration, s.blockchain.ExtendRegistration)
-	s.register(domain.EventTypeRevokeAlias, s.blockchain.RevokeAlias)
-	s.register(domain.EventTypeUnrevokeAlias, s.blockchain.UnrevokeAlias)
-	s.register(domain.EventTypeRegisterSubdomain, s.blockchain.RegisterSubdomain)
-	s.register(domain.EventTypeTransferAliasOwnership, s.blockchain.TransferAliasOwnership)
-	s.register(domain.EventTypeTransferTLD, s.blockchain.TransferTLD)
-	s.register(domain.EventTypeSetAliasRootStorage, s.blockchain.SetAliasRootStorage)
-	s.register(domain.EventTypeSetAliasOrgStorage, s.blockchain.SetAliasOrgStorage)
-	s.register(domain.EventTypeSetFactoryContract, s.blockchain.SetFactoryContract)
+	s.register(domain.EventTypeRegisterTLD, s.blockchain.RegisterTLD, callback.NoOp)
+	s.register(domain.EventTypeRegisterDomain, s.blockchain.RegisterDomain, callback.NoOp)
+	s.register(domain.EventTypeSetDIDAlias, s.blockchain.SetDIDAlias, callback.NoOp)
+	s.register(domain.EventTypeSetDIDOrgAlias, s.blockchain.SetDIDOrgAlias, callback.NoOp)
+	s.register(domain.EventTypeExtendRegistration, s.blockchain.ExtendRegistration, callback.NoOp)
+	s.register(domain.EventTypeRevokeAlias, s.blockchain.RevokeAlias, callback.NoOp)
+	s.register(domain.EventTypeUnrevokeAlias, s.blockchain.UnrevokeAlias, callback.NoOp)
+	s.register(domain.EventTypeRegisterSubdomain, s.blockchain.RegisterSubdomain, callback.NoOp)
+	s.register(domain.EventTypeTransferAliasOwnership, s.blockchain.TransferAliasOwnership, callback.NoOp)
+	s.register(domain.EventTypeTransferTLD, s.blockchain.TransferTLD, callback.NoOp)
+	s.register(domain.EventTypeSetAliasRootStorage, s.blockchain.SetAliasRootStorage, callback.NoOp)
+	s.register(domain.EventTypeSetAliasOrgStorage, s.blockchain.SetAliasOrgStorage, callback.NoOp)
+	s.register(domain.EventTypeSetFactoryContract, s.blockchain.SetFactoryContract, callback.NoOp)
 }
 
 func sRegister[P any](
 	s *EventService,
 	eventType domain.EventType,
 	fn func(context.Context, P) (*domain.BlockchainResult, error),
+	cb callback.Func,
 ) {
 	s.handlers[eventType] = func(ctx context.Context, raw json.RawMessage) (*domain.BlockchainResult, error) {
 		var p P
@@ -160,80 +185,81 @@ func sRegister[P any](
 		}
 		return fn(ctx, p)
 	}
+	s.eventCallbacks[eventType] = cb
 }
 
-func (s *EventService) register(eventType domain.EventType, fn any) {
+func (s *EventService) register(eventType domain.EventType, fn any, cb callback.Func) {
 	switch f := fn.(type) {
 	case func(context.Context, domain.CreateDIDPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.AddKeyPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.AddClaimPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.StoreDataPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.UpdateDIDPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.DIDLifecyclePayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.TransferDIDOwnerPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.DeleteDataPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.RemoveKeyPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.RemoveClaimPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.CreateOrgPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.OrgMemberPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.OrgLifecyclePayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.OrgTransferPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.HandleOpsPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.DeployWalletPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.IssueCredentialPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.BurnCredentialPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.UpdateMetadataPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.RevokeCredentialPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.ApproveCredentialOrgPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.ApproveCredentialPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.RegisterTLDPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.RegisterDomainPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.SetDIDAliasPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.SetDIDOrgAliasPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.ExtendRegistrationPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.RevokeAliasPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.UnrevokeAliasPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.RegisterSubdomainPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.TransferAliasOwnershipPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.TransferTLDPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.SetAddressPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.SetAliasAddressPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	case func(context.Context, domain.SetFactoryContractPayload) (*domain.BlockchainResult, error):
-		sRegister(s, eventType, f)
+		sRegister(s, eventType, f, cb)
 	default:
 		panic(fmt.Sprintf("unsupported handler signature for event %q: %T", eventType, fn))
 	}
@@ -255,4 +281,21 @@ func (s *EventService) RecordRetry(ctx context.Context, jobID, errMsg string) {
 
 func IsAlreadyProcessed(err error) bool {
 	return errors.Is(err, domain.ErrAlreadyProcessed)
+}
+
+func (s *EventService) triggerCallback(ctx context.Context, event *domain.Event, result callback.Result) {
+	cb, ok := s.eventCallbacks[event.Type]
+	if !ok {
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := cb(ctx, result); err != nil {
+		s.log.WithFields(logrus.Fields{
+			"event_id":   event.ID,
+			"event_type": event.Type,
+		}).WithError(err).Error("callback execution failed")
+	}
 }
