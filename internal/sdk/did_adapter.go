@@ -12,6 +12,7 @@ import (
 
 	"github.com/HARA-DID/did-queueing-engine/internal/config"
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
+	"github.com/sirupsen/logrus"
 )
 
 type DIDAdapter struct {
@@ -215,15 +216,16 @@ func (a *DIDAdapter) EncodeGeneralExecute(p domain.GeneralExecutePayload) ([]byt
 }
 
 func (a *DIDAdapter) EncodeCreateOrg(p domain.CreateOrgPayload) ([]byte, error) {
+	logrus.Infof("Encoding CreateOrg for factory: %s", a.factory.Address.String())
 	return a.encodeOrg(didfactory.TypeCreateOrgDID, p.Data, big.NewInt(0))
 }
 
 func (a *DIDAdapter) EncodeDeactivateOrg(p domain.OrgLifecyclePayload) ([]byte, error) {
-	return a.encodeOrg(didfactory.TypeDeactivateOrgDID, nil, p.OrgDIDIndex)
+	return a.encodeOrg(didfactory.TypeDeactivateOrgDID, p.Data, p.OrgDIDIndex)
 }
 
 func (a *DIDAdapter) EncodeReactivateOrg(p domain.OrgLifecyclePayload) ([]byte, error) {
-	return a.encodeOrg(didfactory.TypeReactivateOrgDID, nil, p.OrgDIDIndex)
+	return a.encodeOrg(didfactory.TypeReactivateOrgDID, p.Data, p.OrgDIDIndex)
 }
 
 func (a *DIDAdapter) EncodeTransferOrgOwner(p domain.OrgTransferPayload) ([]byte, error) {
@@ -262,12 +264,15 @@ func (a *DIDAdapter) encodeOrg(txType uint8, data []byte, orgDIDIndex *big.Int) 
 		return nil, fmt.Errorf("method callExternalOrg not found in ABI")
 	}
 
+	logrus.Infof("Packing callExternalOrg: txType=%d, orgDIDIndex=%s", txType, orgDIDIndex.String())
 	inputs, err := method.Inputs.Pack(txType, data, orgDIDIndex)
 	if err != nil {
 		return nil, fmt.Errorf("failed to pack callExternalOrg arguments: %w", err)
 	}
 
-	return append(method.ID, inputs...), nil
+	fullData := append(method.ID, inputs...)
+	logrus.Infof("Full data hash: %s", crypto.Keccak256Hash(fullData).Hex())
+	return fullData, nil
 }
 
 func resolveKeyIdentifier(provided string) (string, error) {

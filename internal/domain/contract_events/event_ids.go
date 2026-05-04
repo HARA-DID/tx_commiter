@@ -16,8 +16,17 @@ var (
 	TopicKeyRemoved     = crypto.Keccak256Hash([]byte("KeyRemoved(uint256,bytes32)"))
 	TopicClaimAdded     = crypto.Keccak256Hash([]byte("ClaimAdded(uint256,bytes32,uint8,address,bytes)"))
 	TopicClaimRemoved   = crypto.Keccak256Hash([]byte("ClaimRemoved(uint256,bytes32)"))
-	TopicDataChanged    = crypto.Keccak256Hash([]byte("DataChanged(uint256,string,string)"))
-	TopicDataDeleted    = crypto.Keccak256Hash([]byte("DataDeleted(uint256,string)"))
+	TopicDataChanged             = crypto.Keccak256Hash([]byte("DataChanged(uint256,string,string)"))
+	TopicDataDeleted             = crypto.Keccak256Hash([]byte("DataDeleted(uint256,string)"))
+
+	// Org events
+	TopicOrgCreated              = crypto.Keccak256Hash([]byte("OrgCreated(uint256,bytes32,address)"))
+	TopicOrgDeactivated          = crypto.Keccak256Hash([]byte("OrgDeactivated(bytes32)"))
+	TopicOrgReactivated          = crypto.Keccak256Hash([]byte("OrgReactivated(bytes32)"))
+	TopicOrgOwnershipTransferred = crypto.Keccak256Hash([]byte("OrgOwnershipTransferred(bytes32,address,address)"))
+	TopicMemberAdded             = crypto.Keccak256Hash([]byte("MemberAdded(uint256,bytes32,uint8,uint256)"))
+	TopicMemberRemoved           = crypto.Keccak256Hash([]byte("MemberRemoved(uint256,bytes32,uint256)"))
+	TopicMemberUpdated           = crypto.Keccak256Hash([]byte("MemberUpdated(uint256,bytes32,uint8,uint256)"))
 )
 
 func IsTopicMatch(logTopics []common.Hash, topic common.Hash) bool {

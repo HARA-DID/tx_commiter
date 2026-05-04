@@ -80,6 +80,29 @@ func initTxCheckService(cfg config.BlockchainConfig, jobRepo repository.JobRepos
 			return contract_events.DecodeDataDeleted(didFactoryABI, l)
 		})
 
+		// Register Org decoders
+		svc.RegisterDecoder(contract_events.TopicOrgCreated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeOrgCreated(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicOrgDeactivated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeOrgLifecycle(didFactoryABI, l, contract_events.TopicOrgDeactivated, "OrgDeactivated")
+		})
+		svc.RegisterDecoder(contract_events.TopicOrgReactivated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeOrgLifecycle(didFactoryABI, l, contract_events.TopicOrgReactivated, "OrgReactivated")
+		})
+		svc.RegisterDecoder(contract_events.TopicOrgOwnershipTransferred, func(l *types.Log) (any, error) {
+			return contract_events.DecodeOrgOwnershipTransferred(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicMemberAdded, func(l *types.Log) (any, error) {
+			return contract_events.DecodeMemberEvent(didFactoryABI, l, contract_events.TopicMemberAdded, "MemberAdded")
+		})
+		svc.RegisterDecoder(contract_events.TopicMemberRemoved, func(l *types.Log) (any, error) {
+			return contract_events.DecodeMemberEvent(didFactoryABI, l, contract_events.TopicMemberRemoved, "MemberRemoved")
+		})
+		svc.RegisterDecoder(contract_events.TopicMemberUpdated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeMemberEvent(didFactoryABI, l, contract_events.TopicMemberUpdated, "MemberUpdated")
+		})
+
 		return svc, nil
 	}
 }

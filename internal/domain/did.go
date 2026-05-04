@@ -178,13 +178,28 @@ type CreateOrgPayload struct {
 	MultipleRPCCalls  bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
+func (p CreateOrgPayload) Validate() error {
+	if len(p.Data) == 0 {
+		return &ErrValidation{Field: "data", Message: "required"}
+	}
+	return nil
+}
+
 type OrgLifecyclePayload struct {
 	TargetAddress     string   `json:"target_address"`
 	OrgDIDIndex       *big.Int `json:"org_did_index"`
+	Data              []byte   `json:"data"`
 	Signature         []byte   `json:"signature,omitempty"`
 	ClientBlockNumber string   `json:"client_block_number,omitempty"`
 	UserNonce         string   `json:"user_nonce,omitempty"`
 	MultipleRPCCalls  bool     `json:"multiple_rpc_calls,omitempty"`
+}
+
+func (p OrgLifecyclePayload) Validate() error {
+	if p.OrgDIDIndex == nil {
+		return &ErrValidation{Field: "org_did_index", Message: "required"}
+	}
+	return nil
 }
 
 type OrgTransferPayload struct {
@@ -197,6 +212,16 @@ type OrgTransferPayload struct {
 	MultipleRPCCalls  bool     `json:"multiple_rpc_calls,omitempty"`
 }
 
+func (p OrgTransferPayload) Validate() error {
+	if p.OrgDIDIndex == nil {
+		return &ErrValidation{Field: "org_did_index", Message: "required"}
+	}
+	if len(p.Data) == 0 {
+		return &ErrValidation{Field: "data", Message: "required"}
+	}
+	return nil
+}
+
 type OrgMemberPayload struct {
 	TargetAddress     string   `json:"target_address"`
 	OrgDIDIndex       *big.Int `json:"org_did_index"`
@@ -205,6 +230,16 @@ type OrgMemberPayload struct {
 	ClientBlockNumber string   `json:"client_block_number,omitempty"`
 	UserNonce         string   `json:"user_nonce,omitempty"`
 	MultipleRPCCalls  bool     `json:"multiple_rpc_calls,omitempty"`
+}
+
+func (p OrgMemberPayload) Validate() error {
+	if p.OrgDIDIndex == nil {
+		return &ErrValidation{Field: "org_did_index", Message: "required"}
+	}
+	if len(p.Data) == 0 {
+		return &ErrValidation{Field: "data", Message: "required"}
+	}
+	return nil
 }
 
 type GeneralExecutePayload struct {

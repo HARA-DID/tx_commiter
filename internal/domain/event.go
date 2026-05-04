@@ -15,6 +15,10 @@ type EventType string
 func (e EventType) IsValid() bool {
 	switch e {
 	case EventTypeCreateDID, EventTypeAddKey, EventTypeAddClaim, EventTypeStoreData,
+		EventTypeUpdateDID, EventTypeDeactivateDID, EventTypeReactivateDID, EventTypeTransferDID,
+		EventTypeDeleteData, EventTypeRemoveKey, EventTypeRemoveClaim,
+		EventTypeCreateOrg, EventTypeAddMember, EventTypeRemoveMember, EventTypeUpdateMember,
+		EventTypeDeactivateOrg, EventTypeReactivateOrg, EventTypeTransferOrgOwner,
 		EventTypeHandleOps, EventTypeBatchHandleOps, EventTypeInitializeWallet,
 		EventTypeAddOwner, EventTypeTransferERC20, EventTypeInitiateRecovery,
 		EventTypeApproveRecovery, EventTypeExecuteRecovery, EventTypeDeployWallet,
