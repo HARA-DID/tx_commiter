@@ -134,7 +134,6 @@ func (c *Config) validate() error {
 	return nil
 }
 
-// DLQStreamName returns the dead-letter queue stream name.
 func (c *RedisConfig) DLQStreamName() string {
 	return c.StreamName + c.DLQSuffix
 }

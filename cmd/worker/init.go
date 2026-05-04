@@ -59,13 +59,11 @@ func startWorker(ctx context.Context, pk string, index int, deps *WorkerDependen
 	if blockchainSvc, err := initBlockchainService(deps.Config.Blockchain, provider); err != nil {
 		return err
 	} else {
-		// Build Service Layer
 		eventSvc := service.NewEventService(deps.JobRepo, blockchainSvc, log)
 		eventSvc.SetTxCheckService(deps.TxCheckSvc)
 
 		handler := worker.NewHandler(eventSvc, deps.RetryCfg, deps.Metrics, log)
 
-		// Configure and Run Pool
 		workerCfg := deps.Config.Worker
 		workerCfg.ConsumerName = consumerName
 

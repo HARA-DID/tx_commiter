@@ -80,7 +80,7 @@ func (a *AAAdapter) HandleOps(ctx context.Context, p domain.HandleOpsPayload) (*
 		}
 	}
 
-	var blockNum *big.Int
+	blockNum := big.NewInt(0)
 	if p.ClientBlockNumber != "" {
 		if bn, ok := new(big.Int).SetString(p.ClientBlockNumber, 0); ok {
 			blockNum = bn

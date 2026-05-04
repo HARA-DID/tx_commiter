@@ -1,6 +1,5 @@
 package domain
 
-// Alias Event Types
 const (
 	EventTypeRegisterTLD          EventType = "REGISTER_TLD"
 	EventTypeRegisterDomain       EventType = "REGISTER_DOMAIN"
@@ -17,7 +16,6 @@ const (
 	EventTypeSetFactoryContract    EventType = "SET_FACTORY_CONTRACT"
 )
 
-// Alias Payloads
 
 type RegisterTLDPayload struct {
 	TargetAddress    string `json:"target_address"`

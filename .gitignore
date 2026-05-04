@@ -31,3 +31,5 @@ coverage.out
 
 # Scripts
 redis-scripts/
+
+vendor

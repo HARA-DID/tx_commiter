@@ -2,7 +2,6 @@ package domain
 
 import "fmt"
 
-// Account Abstraction Event Types
 const (
 	EventTypeHandleOps        EventType = "HANDLE_OPS"
 	EventTypeBatchHandleOps   EventType = "BATCH_HANDLE_OPS"
@@ -20,13 +19,11 @@ const (
 	EventTypeWithdraw         EventType = "WITHDRAW"
 )
 
-// AA Payloads
-
 type HandleOpsPayload struct {
 	Target            string `json:"target"`
-	Value             string `json:"value"` // hex string for big.Int
+	Value             string `json:"value"` 
 	Data              []byte `json:"data"`
-	UserNonce         string `json:"user_nonce,omitempty"` // optional, fetch from EP if empty
+	UserNonce         string `json:"user_nonce,omitempty"` 
 	Signature         []byte `json:"signature"`
 	ClientBlockNumber string `json:"client_block_number,omitempty"`
 	MultipleRPCCalls  bool   `json:"multiple_rpc_calls,omitempty"`
@@ -106,7 +103,7 @@ func (p AddOwnerPayload) Validate() error {
 type TransferERC20Payload struct {
 	Token            string `json:"token"`
 	To               string `json:"to"`
-	Amount           string `json:"amount"` // Hex string for big.Int
+	Amount           string `json:"amount"` 
 	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 

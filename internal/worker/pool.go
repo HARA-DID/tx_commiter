@@ -118,7 +118,6 @@ func (p *Pool) processMessage(ctx context.Context, msg redis.XMessage) {
 		return
 	}
 
-	// Handler returned false → push to DLQ (Redis + DB).
 	payload, _ := json.Marshal(msg.Values)
 	rawPayload := string(payload)
 

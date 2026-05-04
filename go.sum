@@ -4,8 +4,8 @@ github.com/HARA-DID/account-abstraction-sdk v1.0.2 h1:7aXbGew4Ueo8J2dawG2HlODRAa
 github.com/HARA-DID/account-abstraction-sdk v1.0.2/go.mod h1:l9fOK5bNJof6HCi4uay1BwvGjHMKyU+r4puiBROcBGY=
 github.com/HARA-DID/alias-root-sdk v1.0.2 h1:eQIXe/g/60E+oxCEdiaZEbgAKYfI+73xhQEpImBoiIg=
 github.com/HARA-DID/alias-root-sdk v1.0.2/go.mod h1:45Lhztg95ND+x4IRWs6PUBWKEu/X4M5H3bUWJepO9uw=
-github.com/HARA-DID/did-root-sdk v1.0.2 h1:SnBo9MXG2Pgyub7jpnpaHtrRAsr8WEtkj2/SHDaa1J4=
-github.com/HARA-DID/did-root-sdk v1.0.2/go.mod h1:J7chKh+nb7pJX46f/StRWpQT7sZqJsaBDgQK7wjmZVw=
+github.com/HARA-DID/did-root-sdk v1.0.3 h1:FURzM10r1No8G0QN5PQUbauPD2Jv1JZu3YIT7GyXU9k=
+github.com/HARA-DID/did-root-sdk v1.0.3/go.mod h1:J7chKh+nb7pJX46f/StRWpQT7sZqJsaBDgQK7wjmZVw=
 github.com/HARA-DID/did-verifiable-credentials-sdk v1.0.2 h1:HDt6zqcH7z87/c3Gh0wAPr47spaSE6lWTh1p1dDPk6w=
 github.com/HARA-DID/did-verifiable-credentials-sdk v1.0.2/go.mod h1:SXcePIbi+ggGhsJ8v7pQ3Y67rFeD5N7lTapNBE+QaZ8=
 github.com/HARA-DID/hara-core-blockchain-lib v1.9.62 h1:y4qHr317YtMQFN7tqTuxrTvzZ+mNXdU6Jzf+MnPGPR4=

@@ -122,7 +122,6 @@ func (s *TxCheckService) processBatch(batch []TxCheckTask) {
 		s.log.WithField("check_txs_errors", errs).Warn("some transactions failed check")
 	}
 
-	// Finalize jobs and trigger callbacks
 	for _, t := range batch {
 		if err := s.jobRepo.UpdateStatus(ctx, t.Job.ID, domain.JobStatusSuccess, []string{t.Hash}, ""); err != nil {
 			s.log.WithError(err).WithField("job_id", t.Job.ID).Error("failed to update job status to success")

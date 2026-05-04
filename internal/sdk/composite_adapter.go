@@ -26,7 +26,15 @@ func NewCompositeAdapter(did *DIDAdapter, aa *AAAdapter, vc *VCAdapter, alias *A
 }
 
 func (c *CompositeAdapter) CreateDID(ctx context.Context, p domain.CreateDIDPayload) (*domain.BlockchainResult, error) {
-	return c.did.CreateDID(ctx, p)
+	data, err := c.did.EncodeCreateDID(p)
+	if err != nil {
+		return nil, err
+	}
+	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
+		Target:           p.TargetAddress,
+		Data:             data,
+		MultipleRPCCalls: p.MultipleRPCCalls,
+	})
 }
 
 func (c *CompositeAdapter) AddKey(ctx context.Context, p domain.AddKeyPayload) (*domain.BlockchainResult, error) {

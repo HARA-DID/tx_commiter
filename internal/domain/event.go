@@ -52,10 +52,6 @@ func (e *Event) Validate() error {
 	return nil
 }
 
-// ---------------------------------------------------------------------------
-// Job
-// ---------------------------------------------------------------------------
-
 type JobStatus string
 
 const (
@@ -85,17 +81,9 @@ type DLQEvent struct {
 	CreatedAt    time.Time `db:"created_at"`
 }
 
-// ---------------------------------------------------------------------------
-// Blockchain result
-// ---------------------------------------------------------------------------
-
 type BlockchainResult struct {
 	TxHashes []string
 }
-
-// ---------------------------------------------------------------------------
-// Errors
-// ---------------------------------------------------------------------------
 
 var ErrAlreadyProcessed = fmt.Errorf("event already processed (idempotency check)")
 

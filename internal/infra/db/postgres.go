@@ -11,7 +11,6 @@ import (
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 	"github.com/HARA-DID/did-queueing-engine/internal/repository"
 
-	// PostgreSQL driver
 	_ "github.com/lib/pq"
 )
 
@@ -52,7 +51,6 @@ func (r *PostgresJobRepository) Create(ctx context.Context, job *domain.Job) err
 	return nil
 }
 
-// FindByEventID returns a job by event_id, or (nil, nil) if not found.
 func (r *PostgresJobRepository) FindByEventID(ctx context.Context, eventID string) (*domain.Job, error) {
 	const q = `
 		SELECT id, event_id, type, status, tx_hashes, retry_count, error_message, created_at, updated_at
@@ -88,7 +86,6 @@ func (r *PostgresJobRepository) FindByEventID(ctx context.Context, eventID strin
 	return &job, nil
 }
 
-// UpdateStatus updates a job's outcome fields.
 func (r *PostgresJobRepository) UpdateStatus(
 	ctx context.Context,
 	jobID string,
@@ -114,7 +111,6 @@ func (r *PostgresJobRepository) UpdateStatus(
 	return nil
 }
 
-// IncrementRetry bumps the retry_count and records an error message.
 func (r *PostgresJobRepository) IncrementRetry(ctx context.Context, jobID string, errMsg string) error {
 	const q = `
 		UPDATE jobs
@@ -146,11 +142,6 @@ func (r *PostgresJobRepository) SaveToDLQ(ctx context.Context, event *domain.DLQ
 	return nil
 }
 
-// ---------------------------------------------------------------------------
-// Helpers for PostgreSQL text[] serialization
-// ---------------------------------------------------------------------------
-
-// txHashArray converts a string slice to a Postgres array literal: {a,b,c}
 func txHashArray(hashes []string) string {
 	if len(hashes) == 0 {
 		return "{}"
@@ -158,7 +149,6 @@ func txHashArray(hashes []string) string {
 	return "{" + strings.Join(hashes, ",") + "}"
 }
 
-// parseTxHashArray parses a Postgres array literal back to []string.
 func parseTxHashArray(s string) []string {
 	s = strings.TrimPrefix(s, "{")
 	s = strings.TrimSuffix(s, "}")

@@ -20,7 +20,6 @@ func NewRegistry() *Registry {
 func NewDefaultRegistry() *Registry {
 	r := NewRegistry()
 	
-	// init callback
 	r.MustRegister("log-result", LogResult)
 	r.MustRegister("noop", NoOp)
 	return r

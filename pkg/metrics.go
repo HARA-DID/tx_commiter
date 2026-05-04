@@ -5,7 +5,6 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-// Metrics holds all Prometheus counters and histograms for the worker.
 type Metrics struct {
 	EventsReceived  prometheus.Counter
 	EventsProcessed *prometheus.CounterVec 

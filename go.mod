@@ -5,7 +5,7 @@ go 1.25.5
 require (
 	github.com/HARA-DID/account-abstraction-sdk v1.0.2
 	github.com/HARA-DID/alias-root-sdk v1.0.2
-	github.com/HARA-DID/did-root-sdk v1.0.2
+	github.com/HARA-DID/did-root-sdk v1.0.3
 	github.com/HARA-DID/did-verifiable-credentials-sdk v1.0.2
 	github.com/HARA-DID/hara-core-blockchain-lib v1.9.62
 	github.com/google/uuid v1.6.0

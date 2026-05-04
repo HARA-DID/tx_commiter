@@ -16,7 +16,6 @@ import (
 
 type eventHandler func(context.Context, json.RawMessage) (*domain.BlockchainResult, error)
 
-// EventService orchestrates event processing: idempotency → DB → blockchain → DB.
 type EventService struct {
 	jobRepo        repository.JobRepository
 	blockchain     BlockchainService

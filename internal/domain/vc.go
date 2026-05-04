@@ -4,7 +4,6 @@ import (
 	"math/big"
 )
 
-// Verifiable Credentials Event Types
 const (
 	EventTypeIssueCredential     EventType = "ISSUE_CREDENTIAL"
 	EventTypeBurnCredential      EventType = "BURN_CREDENTIAL"
@@ -15,8 +14,6 @@ const (
 	EventTypeSetDidRootStorage    EventType = "SET_DID_ROOT_STORAGE"
 	EventTypeSetDidOrgStorage     EventType = "SET_DID_ORG_STORAGE"
 )
-
-// VC Payloads
 
 type IssueCredentialPayload struct {
 	TargetAddress    string   `json:"target_address"`
@@ -78,7 +75,6 @@ type SetAddressPayload struct {
 	MultipleRPCCalls bool   `json:"multiple_rpc_calls,omitempty"`
 }
 
-// Result types for queries (if needed by worker)
 type TokenIdsResult struct {
 	TokenIds []*big.Int
 	Total    *big.Int
