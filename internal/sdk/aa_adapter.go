@@ -10,10 +10,13 @@ import (
 	aapkg "github.com/HARA-DID/account-abstraction-sdk/pkg/entrypoint"
 	"github.com/HARA-DID/account-abstraction-sdk/pkg/gasmanager"
 	"github.com/HARA-DID/account-abstraction-sdk/pkg/walletfactory"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	harautils "github.com/HARA-DID/hara-core-blockchain-lib/utils"
 
 	"github.com/HARA-DID/did-queueing-engine/internal/config"
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain/contract_events"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 // AAAdapter implements Account Abstraction related blockchain operations.
@@ -48,6 +51,22 @@ func NewAAAdapter(p *Provider, cfg config.BlockchainConfig) (*AAAdapter, error) 
 		gasManager:    gasMgr,
 		walletFactory: walletFact,
 	}, nil
+}
+
+func (a *AAAdapter) GetEntryPointAddress() harautils.Address {
+	return a.entryPoint.Address
+}
+
+func (a *AAAdapter) GetWalletFactoryAddress() harautils.Address {
+	return a.walletFactory.Address
+}
+
+func (a *AAAdapter) DecodeWalletDeployed(log *types.Log) (*contract_events.WalletDeployed, error) {
+	return contract_events.DecodeWalletDeployed(&a.walletFactory.ContractABI, log)
+}
+
+func (a *AAAdapter) GetWalletFactoryABI() *abi.ABI {
+	return &a.walletFactory.ContractABI
 }
 
 // ── BlockchainService implementation for AA ──────────────────────
@@ -96,8 +115,16 @@ func (a *AAAdapter) HandleOps(ctx context.Context, p domain.HandleOpsPayload) (*
 		Signature:         p.Signature,
 	}
 
+	senderAddr := harautils.HexToAddress(p.Sender)
+	
+	if p.Sender == "" {
+		// TODO: Fallback to relayer for backward compatibility (not recommended for production AA)
+		addr, _ := a.provider.Wallet.GetAddress()
+		senderAddr = addr
+	}
+
 	params := aapkg.HandleOpsParams{
-		Wallet: sender,
+		Wallet: senderAddr,
 		UserOp: userOp,
 	}
 

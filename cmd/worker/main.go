@@ -71,7 +71,10 @@ func main() {
 	retryCfg := pkg.DefaultRetryConfig(cfg.Worker.MaxRetry, cfg.Worker.RetryBaseDelay)
 
 	// ── Global Transaction Check Service ──────────────────────────────────
-	txCheckSvc, _ := initTxCheckService(cfg.Blockchain, jobRepo, callbackRegistry, log)
+	txCheckSvc, err := initTxCheckService(cfg.Blockchain, jobRepo, callbackRegistry, log)
+	if err != nil {
+		log.WithError(err).Fatal("failed to initialize transaction check service")
+	}
 
 	// ── Worker pool per private key ────────────────────────────────────────
 	log.WithField("worker_count", len(cfg.Blockchain.PrivateKeys)).Info("starting worker pools per identity")

@@ -30,6 +30,6 @@ coverage.out
 *.log
 
 # Scripts
-redis-scripts/
+redis-scripts/node_modules
 
 vendor

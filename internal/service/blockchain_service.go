@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 type BlockchainService interface {
@@ -53,4 +54,6 @@ type BlockchainService interface {
 	SetAliasRootStorage(ctx context.Context, payload domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
 	SetAliasOrgStorage(ctx context.Context, payload domain.SetAliasAddressPayload) (*domain.BlockchainResult, error)
 	SetFactoryContract(ctx context.Context, payload domain.SetFactoryContractPayload) (*domain.BlockchainResult, error)
+	GetWalletFactoryABI() *abi.ABI
+	GetDIDFactoryABI() *abi.ABI
 }

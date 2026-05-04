@@ -8,11 +8,13 @@ import (
 
 	"github.com/HARA-DID/did-queueing-engine/internal/callback"
 	"github.com/HARA-DID/did-queueing-engine/internal/config"
+	"github.com/HARA-DID/did-queueing-engine/internal/domain/contract_events"
 	"github.com/HARA-DID/did-queueing-engine/internal/repository"
 	"github.com/HARA-DID/did-queueing-engine/internal/sdk"
 	"github.com/HARA-DID/did-queueing-engine/internal/service"
 	"github.com/HARA-DID/did-queueing-engine/internal/worker"
 	"github.com/HARA-DID/did-queueing-engine/pkg"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -26,14 +28,59 @@ func initTxCheckService(cfg config.BlockchainConfig, jobRepo repository.JobRepos
 	} else {
 		templateEventSvc := service.NewEventService(jobRepo, blockchainSvc, log)
 
-		return service.NewTxCheckService(
+		svc := service.NewTxCheckService(
 			jobRepo,
 			provider.Chain,
+			provider.Network,
 			callbackRegistry,
 			templateEventSvc.EventCallbacks,
 			log,
 			cfg.TxCheckChannelBuffer,
-		), nil
+		)
+
+		// Register AA decoders
+		walletFactoryABI := blockchainSvc.GetWalletFactoryABI()
+		svc.RegisterDecoder(contract_events.TopicWalletDeployed, func(l *types.Log) (any, error) {
+			return contract_events.DecodeWalletDeployed(walletFactoryABI, l)
+		})
+
+		// Register DID decoders
+		didFactoryABI := blockchainSvc.GetDIDFactoryABI()
+		svc.RegisterDecoder(contract_events.TopicKeyAdded, func(l *types.Log) (any, error) {
+			return contract_events.DecodeKeyAdded(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicDIDCreated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeDIDCreated(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicDIDUpdated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeDIDUpdated(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicDIDDeactivated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeDIDLifecycle(didFactoryABI, l, contract_events.TopicDIDDeactivated, "DIDDeactivated")
+		})
+		svc.RegisterDecoder(contract_events.TopicDIDReactivated, func(l *types.Log) (any, error) {
+			return contract_events.DecodeDIDLifecycle(didFactoryABI, l, contract_events.TopicDIDReactivated, "DIDReactivated")
+		})
+		svc.RegisterDecoder(contract_events.TopicDIDTransferred, func(l *types.Log) (any, error) {
+			return contract_events.DecodeDIDTransferred(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicKeyRemoved, func(l *types.Log) (any, error) {
+			return contract_events.DecodeKeyRemoved(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicClaimAdded, func(l *types.Log) (any, error) {
+			return contract_events.DecodeClaimAdded(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicClaimRemoved, func(l *types.Log) (any, error) {
+			return contract_events.DecodeClaimRemoved(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicDataChanged, func(l *types.Log) (any, error) {
+			return contract_events.DecodeDataChanged(didFactoryABI, l)
+		})
+		svc.RegisterDecoder(contract_events.TopicDataDeleted, func(l *types.Log) (any, error) {
+			return contract_events.DecodeDataDeleted(didFactoryABI, l)
+		})
+
+		return svc, nil
 	}
 }
 

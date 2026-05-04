@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -9,6 +11,10 @@ import (
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 	"github.com/HARA-DID/did-queueing-engine/internal/repository"
 	"github.com/HARA-DID/hara-core-blockchain-lib/pkg/blockchain"
+	"github.com/HARA-DID/hara-core-blockchain-lib/pkg/network"
+	harautils "github.com/HARA-DID/hara-core-blockchain-lib/utils"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/sirupsen/logrus"
 )
 
@@ -21,16 +27,19 @@ type TxCheckTask struct {
 type TxCheckService struct {
 	jobRepo        repository.JobRepository
 	bcClient       *blockchain.Blockchain
+	network        *network.Network
 	callbacks      *callback.Registry
 	eventCallbacks map[domain.EventType]callback.Func
 	log            *logrus.Logger
 	tasks          chan TxCheckTask
 	wg             sync.WaitGroup
+	decoders       map[common.Hash]func(*types.Log) (any, error)
 }
 
 func NewTxCheckService(
 	jobRepo repository.JobRepository,
 	bcClient *blockchain.Blockchain,
+	nw *network.Network,
 	callbacks *callback.Registry,
 	eventCallbacks map[domain.EventType]callback.Func,
 	log *logrus.Logger,
@@ -39,11 +48,17 @@ func NewTxCheckService(
 	return &TxCheckService{
 		jobRepo:        jobRepo,
 		bcClient:       bcClient,
+		network:        nw,
 		callbacks:      callbacks,
 		eventCallbacks: eventCallbacks,
 		log:            log,
 		tasks:          make(chan TxCheckTask, bufferSize),
+		decoders:       make(map[common.Hash]func(*types.Log) (any, error)),
 	}
+}
+
+func (s *TxCheckService) RegisterDecoder(topic common.Hash, decoder func(*types.Log) (any, error)) {
+	s.decoders[topic] = decoder
 }
 
 func (s *TxCheckService) Enqueue(task TxCheckTask) {
@@ -123,6 +138,17 @@ func (s *TxCheckService) processBatch(batch []TxCheckTask) {
 	}
 
 	for _, t := range batch {
+		cleanHash := strings.Trim(t.Hash, "\" ")
+		if cleanHash == "" || cleanHash == (common.Hash{}).Hex() {
+			continue
+		}
+
+		receipt, err := s.network.TransactionReceipt(ctx, harautils.HexToHash(cleanHash))
+		var logs []*types.Log
+		if err == nil && receipt != nil {
+			logs = receipt.Logs
+		}
+
 		if err := s.jobRepo.UpdateStatus(ctx, t.Job.ID, domain.JobStatusSuccess, []string{t.Hash}, ""); err != nil {
 			s.log.WithError(err).WithField("job_id", t.Job.ID).Error("failed to update job status to success")
 		}
@@ -133,6 +159,7 @@ func (s *TxCheckService) processBatch(batch []TxCheckTask) {
 			EventType: string(t.Event.Type),
 			Success:   true,
 			TxHashes:  []string{t.Hash},
+			Logs:      logs,
 		})
 
 		s.log.WithFields(logrus.Fields{
@@ -140,6 +167,23 @@ func (s *TxCheckService) processBatch(batch []TxCheckTask) {
 			"tx_hash":  t.Hash,
 			"event_id": t.Event.ID,
 		}).Info("event processed successfully in background")
+
+		// Decode and log events
+		for _, log := range logs {
+			if len(log.Topics) > 0 {
+				if decoder, ok := s.decoders[log.Topics[0]]; ok {
+					decoded, err := decoder(log)
+					if err != nil {
+						s.log.WithError(err).Warn("failed to decode contract event")
+						continue
+					}
+					s.log.WithFields(logrus.Fields{
+						"event_type": fmt.Sprintf("%T", decoded),
+						"data":       fmt.Sprintf("%+v", decoded),
+					}).Info("decoded contract event")
+				}
+			}
+		}
 	}
 }
 

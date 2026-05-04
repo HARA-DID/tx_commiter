@@ -39,6 +39,10 @@ func NewAliasAdapter(p *Provider, cfg config.BlockchainConfig) (*AliasAdapter, e
 	}, nil
 }
 
+func (a *AliasAdapter) GetFactoryAddress() string {
+	return a.factory.Address.Hex()
+}
+
 func (a *AliasAdapter) RegisterTLD(ctx context.Context, p domain.RegisterTLDPayload) (*domain.BlockchainResult, error) {
 	params := aliasfact.RegisterTLDParams{
 		TLD:   p.TLD,

@@ -1,0 +1,13 @@
+{
+  "name": "redis-scripts",
+  "version": "1.0.0",
+  "description": "Scripts for testing Redis streams",
+  "main": "publish_deploy_wallet.js",
+  "scripts": {
+    "test-publish": "node publish_deploy_wallet.js"
+  },
+  "dependencies": {
+    "ethers": "^6.16.0",
+    "ioredis": "^5.0.0"
+  }
+}

@@ -19,25 +19,7 @@ const (
 	EventTypeWithdraw         EventType = "WITHDRAW"
 )
 
-type HandleOpsPayload struct {
-	Target            string `json:"target"`
-	Value             string `json:"value"` 
-	Data              []byte `json:"data"`
-	UserNonce         string `json:"user_nonce,omitempty"` 
-	Signature         []byte `json:"signature"`
-	ClientBlockNumber string `json:"client_block_number,omitempty"`
-	MultipleRPCCalls  bool   `json:"multiple_rpc_calls,omitempty"`
-}
 
-func (p HandleOpsPayload) Validate() error {
-	if p.Target == "" {
-		return fmt.Errorf("target is required")
-	}
-	if len(p.Signature) == 0 {
-		return fmt.Errorf("signature is required")
-	}
-	return nil
-}
 
 type BatchHandleOpsPayload struct {
 	Wallet           string             `json:"wallet"`

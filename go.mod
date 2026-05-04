@@ -7,7 +7,8 @@ require (
 	github.com/HARA-DID/alias-root-sdk v1.0.2
 	github.com/HARA-DID/did-root-sdk v1.0.3
 	github.com/HARA-DID/did-verifiable-credentials-sdk v1.0.2
-	github.com/HARA-DID/hara-core-blockchain-lib v1.9.62
+	github.com/HARA-DID/hara-core-blockchain-lib v1.9.91
+	github.com/ethereum/go-ethereum v1.16.7
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
@@ -31,7 +32,6 @@ require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.0.1 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/ethereum/c-kzg-4844/v2 v2.1.5 // indirect
-	github.com/ethereum/go-ethereum v1.16.7 // indirect
 	github.com/ethereum/go-verkle v0.2.2 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-ole/go-ole v1.3.0 // indirect

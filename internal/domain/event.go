@@ -60,6 +60,27 @@ const (
 	JobStatusFailed  JobStatus = "failed"
 )
 
+type HandleOpsPayload struct {
+	Sender            string `json:"sender,omitempty"`
+	Target            string `json:"target"`
+	Value             string `json:"value,omitempty"`
+	Data              []byte `json:"data"`
+	Signature         []byte `json:"signature"`
+	UserNonce         string `json:"user_nonce,omitempty"`
+	ClientBlockNumber string `json:"client_block_number,omitempty"`
+	MultipleRPCCalls  bool   `json:"multiple_rpc_calls,omitempty"`
+}
+
+func (p HandleOpsPayload) Validate() error {
+	if p.Target == "" {
+		return fmt.Errorf("target is required")
+	}
+	if len(p.Signature) == 0 {
+		return fmt.Errorf("signature is required")
+	}
+	return nil
+}
+
 type Job struct {
 	ID           string    `db:"id"`
 	EventID      string    `db:"event_id"`

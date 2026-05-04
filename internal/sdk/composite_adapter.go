@@ -5,6 +5,7 @@ import (
 
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
 	"github.com/HARA-DID/did-queueing-engine/internal/service"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 var _ service.BlockchainService = (*CompositeAdapter)(nil)
@@ -31,9 +32,13 @@ func (c *CompositeAdapter) CreateDID(ctx context.Context, p domain.CreateDIDPayl
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress, 
+		Target:            c.did.GetAddress().String(), 
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -43,9 +48,13 @@ func (c *CompositeAdapter) AddKey(ctx context.Context, p domain.AddKeyPayload) (
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -55,9 +64,13 @@ func (c *CompositeAdapter) AddClaim(ctx context.Context, p domain.AddClaimPayloa
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -67,9 +80,13 @@ func (c *CompositeAdapter) StoreData(ctx context.Context, p domain.StoreDataPayl
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -79,9 +96,13 @@ func (c *CompositeAdapter) UpdateDID(ctx context.Context, p domain.UpdateDIDPayl
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -91,9 +112,13 @@ func (c *CompositeAdapter) DeactivateDID(ctx context.Context, p domain.DIDLifecy
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -103,9 +128,13 @@ func (c *CompositeAdapter) ReactivateDID(ctx context.Context, p domain.DIDLifecy
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -115,9 +144,13 @@ func (c *CompositeAdapter) TransferDIDOwner(ctx context.Context, p domain.Transf
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -127,9 +160,13 @@ func (c *CompositeAdapter) DeleteData(ctx context.Context, p domain.DeleteDataPa
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -139,9 +176,13 @@ func (c *CompositeAdapter) RemoveKey(ctx context.Context, p domain.RemoveKeyPayl
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -151,9 +192,13 @@ func (c *CompositeAdapter) RemoveClaim(ctx context.Context, p domain.RemoveClaim
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -163,9 +208,13 @@ func (c *CompositeAdapter) GeneralExecute(ctx context.Context, p domain.GeneralE
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -175,9 +224,13 @@ func (c *CompositeAdapter) CreateOrg(ctx context.Context, p domain.CreateOrgPayl
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -187,9 +240,13 @@ func (c *CompositeAdapter) DeactivateOrg(ctx context.Context, p domain.OrgLifecy
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -199,9 +256,13 @@ func (c *CompositeAdapter) ReactivateOrg(ctx context.Context, p domain.OrgLifecy
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -211,9 +272,13 @@ func (c *CompositeAdapter) TransferOrgOwner(ctx context.Context, p domain.OrgTra
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -223,9 +288,13 @@ func (c *CompositeAdapter) AddMember(ctx context.Context, p domain.OrgMemberPayl
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -235,9 +304,13 @@ func (c *CompositeAdapter) RemoveMember(ctx context.Context, p domain.OrgMemberP
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -247,9 +320,13 @@ func (c *CompositeAdapter) UpdateMember(ctx context.Context, p domain.OrgMemberP
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
-		Data:             data,
-		MultipleRPCCalls: p.MultipleRPCCalls,
+		Sender:            p.TargetAddress,
+		Target:            c.did.GetAddress().String(),
+		Data:              data,
+		Signature:         p.Signature,
+		ClientBlockNumber: p.ClientBlockNumber,
+		UserNonce:         p.UserNonce,
+		MultipleRPCCalls:  p.MultipleRPCCalls,
 	})
 }
 
@@ -267,7 +344,8 @@ func (c *CompositeAdapter) IssueCredential(ctx context.Context, p domain.IssueCr
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -279,7 +357,8 @@ func (c *CompositeAdapter) BurnCredential(ctx context.Context, p domain.BurnCred
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -291,7 +370,8 @@ func (c *CompositeAdapter) UpdateMetadata(ctx context.Context, p domain.UpdateMe
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -303,7 +383,8 @@ func (c *CompositeAdapter) RevokeCredential(ctx context.Context, p domain.Revoke
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -315,7 +396,8 @@ func (c *CompositeAdapter) ApproveCredentialOrg(ctx context.Context, p domain.Ap
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -327,7 +409,8 @@ func (c *CompositeAdapter) ApproveCredential(ctx context.Context, p domain.Appro
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -339,7 +422,8 @@ func (c *CompositeAdapter) SetDidRootStorage(ctx context.Context, p domain.SetAd
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetStorageAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -351,7 +435,8 @@ func (c *CompositeAdapter) SetDidOrgStorage(ctx context.Context, p domain.SetAdd
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.vc.GetStorageAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -367,7 +452,8 @@ func (c *CompositeAdapter) RegisterDomain(ctx context.Context, p domain.Register
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -379,7 +465,8 @@ func (c *CompositeAdapter) SetDIDAlias(ctx context.Context, p domain.SetDIDAlias
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -391,7 +478,8 @@ func (c *CompositeAdapter) SetDIDOrgAlias(ctx context.Context, p domain.SetDIDOr
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -403,7 +491,8 @@ func (c *CompositeAdapter) ExtendRegistration(ctx context.Context, p domain.Exte
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -415,7 +504,8 @@ func (c *CompositeAdapter) RevokeAlias(ctx context.Context, p domain.RevokeAlias
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -427,7 +517,8 @@ func (c *CompositeAdapter) UnrevokeAlias(ctx context.Context, p domain.UnrevokeA
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -439,7 +530,8 @@ func (c *CompositeAdapter) RegisterSubdomain(ctx context.Context, p domain.Regis
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -451,7 +543,8 @@ func (c *CompositeAdapter) TransferAliasOwnership(ctx context.Context, p domain.
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -463,7 +556,8 @@ func (c *CompositeAdapter) TransferTLD(ctx context.Context, p domain.TransferTLD
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -475,7 +569,8 @@ func (c *CompositeAdapter) SetAliasRootStorage(ctx context.Context, p domain.Set
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -487,7 +582,8 @@ func (c *CompositeAdapter) SetAliasOrgStorage(ctx context.Context, p domain.SetA
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
@@ -499,8 +595,17 @@ func (c *CompositeAdapter) SetFactoryContract(ctx context.Context, p domain.SetF
 		return nil, err
 	}
 	return c.aa.HandleOps(ctx, domain.HandleOpsPayload{
-		Target:           p.TargetAddress,
+		Sender:           p.TargetAddress,
+		Target:           c.alias.GetFactoryAddress(),
 		Data:             data,
 		MultipleRPCCalls: p.MultipleRPCCalls,
 	})
+}
+
+func (c *CompositeAdapter) GetWalletFactoryABI() *abi.ABI {
+	return c.aa.GetWalletFactoryABI()
+}
+
+func (c *CompositeAdapter) GetDIDFactoryABI() *abi.ABI {
+	return c.did.GetDIDFactoryABI()
 }

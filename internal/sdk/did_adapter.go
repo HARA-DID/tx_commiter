@@ -7,6 +7,8 @@ import (
 
 	didfactory "github.com/HARA-DID/did-root-sdk/pkg/factory"
 	harautils "github.com/HARA-DID/hara-core-blockchain-lib/utils"
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/crypto"
 
 	"github.com/HARA-DID/did-queueing-engine/internal/config"
 	"github.com/HARA-DID/did-queueing-engine/internal/domain"
@@ -31,6 +33,14 @@ func NewDIDAdapter(p *Provider, cfg config.BlockchainConfig) (*DIDAdapter, error
 	}, nil
 }
 
+func (a *DIDAdapter) GetAddress() harautils.Address {
+	return a.factory.Address
+}
+
+func (a *DIDAdapter) GetDIDFactoryABI() *abi.ABI {
+	return &a.factory.ContractABI
+}
+
 func (a *DIDAdapter) EncodeCreateDID(p domain.CreateDIDPayload) ([]byte, error) {
 	keyID, err := resolveKeyIdentifier(p.KeyIdentifier)
 	if err != nil {
@@ -50,12 +60,17 @@ func (a *DIDAdapter) EncodeAddKey(p domain.AddKeyPayload) ([]byte, error) {
 		return nil, err
 	}
 
-	keyHashed := harautils.HexToHash(p.PublicKey)
+	keyIDDst, err := resolveKeyIdentifier(p.KeyIdentifierDst)
+	if err != nil {
+		return nil, err
+	}
+
+	keyHashed := crypto.Keccak256Hash(harautils.HexToAddress(p.PublicKey).Bytes())
 
 	argBuilder := a.provider.Network.ArgBuilder().
 		Type("uint256").Value(p.DIDIndex).
 		Type("bytes32").Value(keyHashed).
-		Type("string").Value("").
+		Type("string").Value(keyIDDst).
 		Type("uint8").Value(p.Purpose).
 		Type("uint8").Value(p.KeyType)
 	data := harautils.EncodeArgs(argBuilder)
